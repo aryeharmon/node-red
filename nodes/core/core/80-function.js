@@ -200,8 +200,12 @@ module.exports = function(RED) {
             this.script = vm.createScript(functionText);
             this.on("input", function(msg) {
 
-                var msg_result = eval("(function(msg){" + this.func + "})(msg)");
-                node.send(msg_result || msg);
+                try {
+                    var msg_result = eval("(function(msg){" + this.func + "})(msg)");
+                    node.send(msg_result || msg);
+                } catch(err) {
+                    node.status({fill: "red", shape: "ring", text: err.toString()});
+                }
 
 
                 // try {
