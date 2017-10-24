@@ -200,9 +200,10 @@ module.exports = function(RED) {
             this.script = vm.createScript(functionText);
             this.on("input", function(msg) {
 
-                eval(this.func);
-                node.send(msg);
-                
+                var msg_result = eval("(function(msg){" + this.func + "})(msg)");
+                node.send(msg_result || msg);
+
+
                 // try {
                 //     var start = process.hrtime();
                 //     context.msg = msg;
