@@ -254,6 +254,7 @@ module.exports = function(RED) {
         } catch(err) {
             // eg SyntaxError - which v8 doesn't include line number information
             // so we can't do better than this
+            node.status({fill: "red", shape: "ring", text: "err"});
             this.error(err);
         }
     }
