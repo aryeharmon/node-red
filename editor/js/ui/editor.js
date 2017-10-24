@@ -660,7 +660,7 @@ RED.editor = (function() {
     function buildLabelRow(type, index, value, placeHolder) {
         var result = $('<div>',{class:"node-label-form-row"});
         if (type === undefined) {
-            $('<span>').html("none").appendTo(result);
+            $('<span>').html(RED._("editor.noDefaultLabel")).appendTo(result);
             result.addClass("node-label-form-none");
         } else {
             result.addClass("");
@@ -1838,12 +1838,12 @@ RED.editor = (function() {
 
                 tabs.addTab({
                     id: 'expression-help',
-                    label: 'Function reference',
+                    label: RED._('expressionEditor.functionReference'),
                     content: $("#node-input-expression-tab-help")
                 });
                 tabs.addTab({
                     id: 'expression-tests',
-                    label: 'Test',
+                    label: RED._('expressionEditor.test'),
                     content: $("#node-input-expression-tab-test")
                 });
                 testDataEditor = RED.editor.createEditor({

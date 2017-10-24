@@ -236,7 +236,7 @@ RED.typeSearch = (function() {
         var items = [];
         RED.nodes.registry.getNodeTypes().forEach(function(t) {
             var def = RED.nodes.getType(t);
-            if (def.category !== 'config' && t !== 'unknown') {
+            if (def.category !== 'config' && t !== 'unknown' && t !== 'tab') {
                 items.push({type:t,def: def, label:getTypeLabel(t,def)});
             }
         });
@@ -255,16 +255,19 @@ RED.typeSearch = (function() {
         var commonCount = 0;
         var item;
         for(i=0;i<common.length;i++) {
-            item = {
-                type: common[i],
-                common: true,
-                def: RED.nodes.getType(common[i])
-            };
-            item.label = getTypeLabel(item.type,item.def);
-            if (i === common.length-1) {
-                item.separator = true;
+            var itemDef = RED.nodes.getType(common[i]);
+            if (itemDef) {
+                item = {
+                    type: common[i],
+                    common: true,
+                    def: itemDef
+                };
+                item.label = getTypeLabel(item.type,item.def);
+                if (i === common.length-1) {
+                    item.separator = true;
+                }
+                searchResults.editableList('addItem', item);
             }
-            searchResults.editableList('addItem', item);
         }
         for(i=0;i<Math.min(5,recentlyUsed.length);i++) {
             item = {
