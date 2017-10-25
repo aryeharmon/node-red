@@ -19,6 +19,7 @@ module.exports = function(RED) {
     var util = require("util");
     var vm = require("vm");
     var cheerio = require('cheerio');
+    var md5 = require('md5');
 
     function sendResults(node,_msgid,msgs) {
         if (msgs == null) {
