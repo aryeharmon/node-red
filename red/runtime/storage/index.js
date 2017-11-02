@@ -18,7 +18,7 @@ var when = require('when');
 var Path = require('path');
 var crypto = require('crypto');
 
-var log = require("../log");
+var log = require("../log")();
 
 var runtime;
 var storageModule;

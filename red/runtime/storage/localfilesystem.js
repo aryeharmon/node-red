@@ -21,7 +21,7 @@ var keys = require('when/keys');
 var fspath = require("path");
 var mkdirp = fs.mkdirs;
 
-var log = require("../log");
+var log = require("../log")();
 
 var promiseDir = nodeFn.lift(mkdirp);
 

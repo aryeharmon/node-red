@@ -20,7 +20,7 @@ var when = require("when");
 var path = require("path");
 var fs = require("fs");
 
-var events = require("../../events");
+var events = require("../../events")();
 
 var settings;
 
@@ -43,7 +43,7 @@ function init(_settings,_loader) {
     nodeConstructors = {};
     nodeList = [];
     nodeConfigCache = null;
-    Node = require("../Node");
+    Node = require("../Node")();
     events.removeListener("node-icon-dir",nodeIconDir);
     events.on("node-icon-dir",nodeIconDir);
 

@@ -20,9 +20,9 @@ var path = require("path");
 var fs = require("fs");
 
 var registry = require("./registry")();
-var log = require("../../log");
+var log = require("../../log")();
 
-var events = require("../../events");
+var events = require("../../events")();
 
 var child_process = require('child_process');
 var npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';

@@ -18,8 +18,8 @@ var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 var when = require("when");
 
-var redUtil = require("../util");
-var Log = require("../log");
+var redUtil = require("../util")();
+var Log = require("../log")();
 var context = require("./context")();
 var flows = require("./flows")();
 

@@ -16,7 +16,7 @@
 
 var clone = require("clone");
 var when = require("when");
-var util = require("../util");
+var util = require("../util")();
 
 function createContext(id,seed) {
     var data = seed || {};

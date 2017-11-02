@@ -18,7 +18,7 @@ var when = require("when");
 var fs = require("fs");
 var path = require("path");
 
-var events = require("../../events");
+var events = require("../../events")();
 var registry = require("./registry");
 var loader = require("./loader");
 var installer = require("./installer");

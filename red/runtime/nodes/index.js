@@ -29,7 +29,7 @@ var Node = require("./Node")();
 var log = null;
 var library = require("./library")();
 
-var events = require("../events");
+var events = require("../events")();
 
 var settings;
 

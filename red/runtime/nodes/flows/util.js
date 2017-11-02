@@ -15,9 +15,9 @@
  **/
  module.exports = function() {
 var clone = require("clone");
-var redUtil = require("../../util");
+var redUtil = require("../../util")();
 var subflowInstanceRE = /^subflow:(.+)$/;
-var typeRegistry = require("../registry");
+var typeRegistry = require("../registry")();
 
 function diffNodes(oldNode,newNode) {
     if (oldNode == null) {
