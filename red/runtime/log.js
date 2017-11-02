@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 
@@ -86,7 +86,7 @@ var consoleLogger = function(msg) {
     }
 }
 
-var log = module.exports = {
+var log = {
     FATAL:  10,
     ERROR:  20,
     WARN:   30,
@@ -164,3 +164,6 @@ var log = module.exports = {
 }
 
 log["_"] = i18n._;
+
+return log;
+};

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var i18n = require("i18next");
 var when = require("when");
 var path = require("path");
@@ -111,7 +111,7 @@ function getCatalog(namespace,lang) {
     return result;
 }
 
-var obj = module.exports = {
+var obj = {
     init: init,
     registerMessageCatalog: registerMessageCatalog,
     registerMessageCatalogs: registerMessageCatalogs,
@@ -119,6 +119,7 @@ var obj = module.exports = {
     i: i18n,
     defaultLang: defaultLang
 }
+
 
 obj['_'] = function() {
     //var opts = {};
@@ -128,3 +129,6 @@ obj['_'] = function() {
     //console.log(arguments);
     return i18n.t.apply(null,arguments);
 }
+
+return obj;
+};

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var when = require('when');
 var Path = require('path');
 var crypto = require('crypto');
@@ -30,12 +30,12 @@ function moduleSelector(aSettings) {
     if (aSettings.storageModule) {
         if (typeof aSettings.storageModule === "string") {
             // TODO: allow storage modules to be specified by absolute path
-            toReturn = require("./"+aSettings.storageModule);
+            toReturn = require("./"+aSettings.storageModule)();
         } else {
             toReturn = aSettings.storageModule;
         }
     } else {
-        toReturn = require("./localfilesystem");
+        toReturn = require("./localfilesystem")();
     }
     return toReturn;
 }
@@ -215,4 +215,5 @@ function listFlows(path) {
 
 
 
-module.exports = storageModuleInterface;
+return storageModuleInterface;
+};

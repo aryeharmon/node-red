@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var when = require("when");
 var locales = require("./locales")();
@@ -21,9 +22,6 @@ var log;
 var i18n;
 var settings;
 var events;
-
-
-module.exports = function() {
 
 return {
     init: function(runtime) {

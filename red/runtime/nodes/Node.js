@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 var when = require("when");
@@ -282,4 +282,5 @@ Node.prototype.metric = function(eventname, msg, metricValue) {
 Node.prototype.status = function(status) {
     flows.handleStatus(this,status);
 };
-module.exports = Node;
+return Node;
+};

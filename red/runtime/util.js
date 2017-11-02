@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var clone = require("clone");
 var jsonata = require("jsonata");
@@ -366,7 +367,7 @@ function normaliseNodeTypeName(name) {
     return result;
 }
 
-module.exports = {
+return {
     ensureString: ensureString,
     ensureBuffer: ensureBuffer,
     cloneMessage: cloneMessage,
@@ -379,4 +380,5 @@ module.exports = {
     normaliseNodeTypeName: normaliseNodeTypeName,
     prepareJSONataExpression: prepareJSONataExpression,
     evaluateJSONataExpression: evaluateJSONataExpression
+};
 };

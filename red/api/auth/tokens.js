@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var when = require("when");
 
@@ -62,7 +63,7 @@ function loadSessions() {
     return loadedSessions;
 }
 
-module.exports = {
+return {
     init: function(adminAuthSettings, _storage) {
         storage = _storage;
         sessionExpiryTime = adminAuthSettings.sessionExpiryTime || 604800; // 1 week in seconds
@@ -110,3 +111,4 @@ module.exports = {
         });
     }
 }
+};

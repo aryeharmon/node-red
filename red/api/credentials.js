@@ -16,8 +16,9 @@
 
 var log;
 var api;
+ module.exports = function() {
 
-module.exports = {
+return {
     init: function(runtime) {
         log = runtime.log;
         api = runtime.nodes;
@@ -50,3 +51,4 @@ module.exports = {
         res.json(sendCredentials);
     }
 }
+};

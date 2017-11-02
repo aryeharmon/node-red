@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var express = require("express");
 var util = require("util");
@@ -77,7 +78,7 @@ function serveFilesFromTheme(themeValue, themeApp, directory) {
     return result
 }
 
-module.exports = {
+return {
     init: function(runtime) {
         var settings = runtime.settings;
         themeContext = clone(defaultContext);
@@ -194,3 +195,4 @@ module.exports = {
         return serveFile(themeApp,baseUrl,file);
     }
 }
+};

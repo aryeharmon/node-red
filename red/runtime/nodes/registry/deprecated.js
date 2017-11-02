@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- 
+ module.exports = function() {
 var nodes = {
     "irc in":     {module:"node-red-node-irc"},
     "irc out":    {module:"node-red-node-irc"},
@@ -42,8 +42,9 @@ var nodes = {
     "feedparse": {module:"node-red-node-feedparser"}
 }
 
-module.exports = {
+return {
     get: function(id) {
         return nodes[id];
     }
 }
+};

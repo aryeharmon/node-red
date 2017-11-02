@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var clone = require("clone");
 var when = require("when");
 var util = require("../util")();
@@ -81,11 +81,12 @@ function clean(flowConfig) {
         }
     }
 }
-module.exports = {
+return {
     init: function(settings) {
         globalContext = createContext("global",settings.functionGlobalContext || {});
     },
     get: getContext,
     delete: deleteContext,
     clean:clean
+};
 };

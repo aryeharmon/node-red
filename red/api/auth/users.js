@@ -13,6 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 **/
+ module.exports = function() {
 
 var when = require("when");
 var util = require("util");
@@ -107,9 +108,10 @@ function init(config) {
     }
 }
 
-module.exports = {
+return {
     init: init,
     get: function(username) { return api.get(username) },
     authenticate: function() { return api.authenticate.apply(null, arguments) },
     default: function() { return api.default(); }
+};
 };

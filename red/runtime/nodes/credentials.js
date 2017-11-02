@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var when = require("when");
 var crypto = require('crypto');
 var settings;
@@ -38,7 +38,7 @@ function decryptCredentials(key,credentials) {
     return JSON.parse(decrypted);
 }
 
-var api = module.exports = {
+var api = {
     init: function(runtime) {
         log = runtime.log;
         settings = runtime.settings;
@@ -317,3 +317,7 @@ var api = module.exports = {
         }
     }
 }
+
+return api;
+
+};

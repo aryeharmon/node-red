@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
  
 var when = require("when");
 
@@ -21,7 +22,7 @@ var clients = [
     {id:"node-red-admin",secret:"not_available"}
 ];
 
-module.exports = {
+return {
     get: function(id) {
         for (var i=0;i<clients.length;i++) {
             if (clients[i].id == id) {
@@ -31,3 +32,4 @@ module.exports = {
         return when.resolve(null);
     }
 }
+};

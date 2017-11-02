@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var BearerStrategy = require('passport-http-bearer').Strategy;
 var ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
@@ -123,7 +124,7 @@ AnonymousStrategy.prototype.authenticate = function(req) {
     });
 }
 
-module.exports = {
+return {
     init: function(runtime) {
         log = runtime.log;
     },
@@ -132,3 +133,4 @@ module.exports = {
     passwordTokenExchange: passwordTokenExchange,
     anonymousStrategy: new AnonymousStrategy()
 }
+};

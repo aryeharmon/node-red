@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var when = require("when");
 var fs = require("fs");
 var path = require("path");
 
 var events = require("../../events")();
-var registry = require("./registry");
-var loader = require("./loader");
-var installer = require("./installer");
+var registry = require("./registry")();
+var loader = require("./loader")();
+var installer = require("./installer")();
 
 var settings;
 
@@ -55,7 +55,7 @@ function enableNodeSet(typeOrId) {
     });
 }
 
-module.exports = {
+return {
     init:init,
     load:load,
     clear: registry.clear,
@@ -84,4 +84,5 @@ module.exports = {
     cleanModuleList: registry.cleanModuleList,
 
     paletteEditorEnabled: installer.paletteEditorEnabled
+};
 };

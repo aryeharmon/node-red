@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
+
 var theme = require("./theme")();
 var util = require('util');
 var runtime;
 var settings;
 
-module.exports = {
+return {
     init: function(_runtime) {
         runtime = _runtime;
         settings = runtime.settings;
@@ -54,3 +56,4 @@ module.exports = {
         res.json(safeSettings);
     }
 }
+};

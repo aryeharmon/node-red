@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var when = require("when");
 var fs = require("fs");
 var path = require("path");
@@ -39,6 +39,7 @@ function load(defaultNodesDir,disableNodePathScan) {
     runtime.log.info(runtime.log._("server.loading"));
 
     var nodeFiles = localfilesystem.getNodeFiles(defaultNodesDir,disableNodePathScan);
+
     return loadNodeFiles(nodeFiles);
 }
 
@@ -112,6 +113,7 @@ function createNodeApi(node) {
 
 function loadNodeFiles(nodeFiles) {
     var promises = [];
+
     for (var module in nodeFiles) {
         /* istanbul ignore else */
         if (nodeFiles.hasOwnProperty(module)) {
@@ -402,10 +404,11 @@ function getNodeHelp(node,lang) {
     return node.help[lang];
 }
 
-module.exports = {
+return {
     init: init,
     load: load,
     addModule: addModule,
     loadNodeSet: loadNodeSet,
     getNodeHelp: getNodeHelp
 }
+};

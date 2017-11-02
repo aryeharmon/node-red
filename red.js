@@ -24,7 +24,7 @@ catch(e) { bcrypt = require('bcryptjs'); }
 var nopt = require("nopt");
 var path = require("path");
 var fs = require("fs-extra");
-var RED = require("./red/red.js");
+var RED = require("./red/red.js")();
 
 var server;
 var app = express();
@@ -84,6 +84,7 @@ if (parsedArgs.settings) {
     // User-specified userDir that contains a settings.js
     settingsFile = path.join(parsedArgs.userDir,"settings.js");
 } else {
+    process.env.NODE_RED_HOME = '/home/aryeh/test555555';
     if (fs.existsSync(path.join(process.env.NODE_RED_HOME,".config.json"))) {
         // NODE_RED_HOME contains user data - use its settings.js
         settingsFile = path.join(process.env.NODE_RED_HOME,"settings.js");

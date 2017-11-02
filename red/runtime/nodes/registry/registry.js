@@ -15,6 +15,9 @@
  **/
 
  //var UglifyJS = require("uglify-js");
+ module.exports = function() {
+    var that = this;
+
 var util = require("util");
 var when = require("when");
 var path = require("path");
@@ -36,7 +39,7 @@ var nodeTypeToId = {};
 var moduleNodes = {};
 
 function init(_settings,_loader) {
-    settings = _settings;
+    that.settings = _settings;
     loader = _loader;
     moduleNodes = {};
     nodeTypeToId = {};
@@ -50,7 +53,7 @@ function init(_settings,_loader) {
 }
 
 function load() {
-    if (settings.available()) {
+    if (that.settings.available()) {
         moduleConfigs = loadNodeConfigs();
     } else {
         moduleConfigs = {};
@@ -130,15 +133,15 @@ function saveNodeList() {
     if (hadPending && !hasPending) {
         events.emit("runtime-event",{id:"restart-required",retain: true});
     }
-    if (settings.available()) {
-        return settings.set("nodes",moduleList);
+    if (that.settings.available()) {
+        return that.settings.set("nodes",moduleList);
     } else {
         return when.reject("Settings unavailable");
     }
 }
 
 function loadNodeConfigs() {
-    var configs = settings.get("nodes");
+    var configs = that.settings.get("nodes");
 
     if (!configs) {
         return {};
@@ -176,7 +179,7 @@ function loadNodeConfigs() {
                 };
             }
         }
-        settings.set("nodes",newConfigs);
+        that.settings.set("nodes",newConfigs);
         return newConfigs;
     }
 }
@@ -231,7 +234,7 @@ function removeNode(id) {
 }
 
 function removeModule(module) {
-    if (!settings.available()) {
+    if (!that.settings.available()) {
         throw new Error("Settings unavailable");
     }
     var nodes = moduleNodes[module];
@@ -479,7 +482,7 @@ function getTypeId(type) {
 }
 
 function enableNodeSet(typeOrId) {
-    if (!settings.available()) {
+    if (!that.settings.available()) {
         throw new Error("Settings unavailable");
     }
 
@@ -493,7 +496,7 @@ function enableNodeSet(typeOrId) {
         delete config.err;
         config.enabled = true;
         nodeConfigCache = null;
-        settings.enableNodeSettings(config.types);
+        that.settings.enableNodeSettings(config.types);
         return saveNodeList().then(function() {
             return filterNodeInfo(config);
         });
@@ -503,7 +506,7 @@ function enableNodeSet(typeOrId) {
 }
 
 function disableNodeSet(typeOrId) {
-    if (!settings.available()) {
+    if (!that.settings.available()) {
         throw new Error("Settings unavailable");
     }
     var id = typeOrId;
@@ -516,7 +519,7 @@ function disableNodeSet(typeOrId) {
         // TODO: persist setting
         config.enabled = false;
         nodeConfigCache = null;
-        settings.disableNodeSettings(config.types);
+        that.settings.disableNodeSettings(config.types);
         return saveNodeList().then(function() {
             return filterNodeInfo(config);
         });
@@ -607,7 +610,7 @@ function getNodeIconPath(module,icon) {
     }
 }
 
-var registry = module.exports = {
+var registry = {
     init: init,
     load: load,
     clear: clear,
@@ -641,4 +644,8 @@ var registry = module.exports = {
     saveNodeList: saveNodeList,
 
     cleanModuleList: cleanModuleList
+};
+
+return registry;
+
 };

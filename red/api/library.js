@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
+
 var fs = require('fs');
 var fspath = require('path');
 var when = require('when');
@@ -73,7 +75,7 @@ function createLibrary(type) {
     }
 }
 
-module.exports = {
+return {
     init: function(app,runtime) {
         redApp = app;
         log = runtime.log;
@@ -159,3 +161,4 @@ module.exports = {
         });
     }
 }
+};

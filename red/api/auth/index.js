@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var passport = require("passport");
 var oauth2orize = require("oauth2orize");
@@ -133,7 +134,7 @@ function completeVerify(profile,done) {
     });
 }
 
-module.exports = {
+return {
     init: init,
     needsPermission: needsPermission,
     ensureClientSecret: ensureClientSecret,
@@ -197,3 +198,4 @@ module.exports = {
 
     }
 }
+};

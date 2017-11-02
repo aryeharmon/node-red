@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-
+module.exports = function() {
 var when = require("when");
 var path = require("path");
 var fs = require("fs");
@@ -232,7 +232,7 @@ function checkPrereq() {
         })
     }
 }
-module.exports = {
+return {
     init: init,
     checkPrereq: checkPrereq,
     installModule: installModule,
@@ -241,3 +241,4 @@ module.exports = {
         return paletteEditorEnabled
     }
 }
+};

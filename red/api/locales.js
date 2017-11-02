@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
+var that = this;
+
 var fs = require('fs');
 var path = require('path');
-var i18n;
 var redNodes;
 
 function determineLangFromHeaders(acceptedLanguages){
@@ -26,9 +28,9 @@ function determineLangFromHeaders(acceptedLanguages){
     }
     return lang;
 }
-module.exports = {
+return {
     init: function(runtime) {
-        i18n = runtime.i18n;
+        that.i18n = runtime.i18n;
         redNodes = runtime.nodes;
     },
     get: function(req,res) {
@@ -36,13 +38,13 @@ module.exports = {
         var lngs = req.query.lng;
         namespace = namespace.replace(/\.json$/,"");
         var lang = req.query.lng; //determineLangFromHeaders(req.acceptsLanguages() || []);
-        var prevLang = i18n.i.lng();
+        var prevLang = that.i18n.i.lng();
         // Trigger a load from disk of the language if it is not the default
-        i18n.i.setLng(lang, function(){
-            var catalog = i18n.catalog(namespace,lang);
+        that.i18n.i.setLng(lang, function(){
+            var catalog = that.i18n.catalog(namespace,lang);
             res.json(catalog||{});
         });
-        i18n.i.setLng(prevLang);
+        that.i18n.i.setLng(prevLang);
 
     },
     getAllNodes: function(req,res) {
@@ -51,10 +53,11 @@ module.exports = {
         var result = {};
         nodeList.forEach(function(n) {
             if (n.module !== "node-red") {
-                result[n.id] = i18n.catalog(n.id,lngs)||{};
+                result[n.id] = that.i18n.catalog(n.id,lngs)||{};
             }
         });
         res.json(result);
     },
     determineLangFromHeaders: determineLangFromHeaders
 }
+};

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 
 var util = require('util');
 
@@ -60,6 +61,7 @@ function hasPermission(userScope,permission) {
     return false;
 }
 
-module.exports = {
+return {
     hasPermission: hasPermission,
 }
+};

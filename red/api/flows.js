@@ -17,8 +17,9 @@
 var log;
 var redNodes;
 var settings;
+ module.exports = function() {
 
-module.exports = {
+return {
     init: function(runtime) {
         settings = runtime.settings;
         redNodes = runtime.nodes;
@@ -85,3 +86,4 @@ module.exports = {
         }
     }
 }
+};

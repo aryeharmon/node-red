@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var fs = require('fs-extra');
 var when = require('when');
 var nodeFn = require('when/node/function');
@@ -440,4 +440,5 @@ var localfilesystem = {
     }
 };
 
-module.exports = localfilesystem;
+return localfilesystem;
+};

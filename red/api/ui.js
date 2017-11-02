@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 var express = require('express');
 var fs = require("fs");
 var path = require("path");
@@ -25,7 +26,7 @@ var redNodes;
 var templateDir = path.resolve(__dirname+"/../../editor/templates");
 var editorTemplate;
 
-module.exports = {
+return {
     init: function(runtime) {
         redNodes = runtime.nodes;
         editorTemplate = fs.readFileSync(path.join(templateDir,"index.mst"),"utf8");
@@ -53,4 +54,5 @@ module.exports = {
         res.send(Mustache.render(editorTemplate,theme.context()));
     },
     editorResources: express.static(__dirname + '/../../public')
+};
 };
