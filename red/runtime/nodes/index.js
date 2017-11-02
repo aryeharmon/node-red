@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+module.exports = function() {
 
 var when = require("when");
 var path = require("path");
@@ -21,7 +22,7 @@ var clone = require("clone");
 
 var registry = require("./registry");
 var credentials = require("./credentials");
-var flows = require("./flows");
+var flows = require("./flows")();
 var flowUtil = require("./flows/util")
 var context = require("./context");
 var Node = require("./Node");
@@ -119,7 +120,7 @@ function uninstallModule(module) {
     }
 }
 
-module.exports = {
+return {
     // Lifecycle
     init: init,
     load: registry.load,
@@ -173,4 +174,5 @@ module.exports = {
     getCredentials: credentials.get,
     deleteCredentials: credentials.delete,
     getCredentialDefinition: credentials.getDefinition
+};
 };

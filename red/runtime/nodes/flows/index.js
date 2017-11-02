@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var clone = require("clone");
 var when = require("when");
 
-var Flow = require('./Flow');
+var Flow = require('./Flow')();
 
 var typeRegistry = require("../registry");
 var context = require("../context")
 var credentials = require("../credentials");
 
-var flowUtil = require("./util");
+var flowUtil = require("./util")();
 var log = require("../../log");
 var events = require("../../events");
 var redUtil = require("../../util");
@@ -622,7 +622,7 @@ function removeFlow(id) {
     });
 }
 
-module.exports = {
+return {
     init: init,
 
     /**
@@ -672,4 +672,5 @@ module.exports = {
     disableFlow:null,
     enableFlow:null
 
+};
 };

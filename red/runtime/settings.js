@@ -14,6 +14,7 @@
  * limitations under the License.
  **/
 
+module.exports = function() {
 var when = require("when");
 var clone = require("clone");
 var assert = require("assert");
@@ -151,4 +152,6 @@ var persistentSettings = {
     }
 }
 
-module.exports = persistentSettings;
+return persistentSettings;
+};
+

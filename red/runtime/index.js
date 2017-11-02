@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var when = require('when');
 
-var redNodes = require("./nodes");
+var redNodes = require("./nodes")();
 var storage = require("./storage");
 var log = require("./log");
 var i18n = require("./i18n");
 var events = require("./events");
-var settings = require("./settings");
+var settings = require("./settings")();
 
 var express = require("express");
 var path = require('path');
@@ -228,7 +228,7 @@ function stop() {
     return redNodes.stopFlows();
 }
 
-var runtime = module.exports = {
+var runtime  = {
     init: init,
     start: start,
     stop: stop,
@@ -248,3 +248,5 @@ var runtime = module.exports = {
         return started;
     }
 }
+return runtime;
+};

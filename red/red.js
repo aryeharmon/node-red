@@ -17,8 +17,10 @@
 var fs = require("fs");
 var path = require('path');
 
-var runtime = require("./runtime");
-var api = require("./api");
+module.exports = function() {
+
+var runtime = require("./runtime")();
+var api = require("./api")();
 
 process.env.NODE_RED_HOME = process.env.NODE_RED_HOME || path.resolve(__dirname+"/..");
 
@@ -49,7 +51,7 @@ function checkBuild() {
     }
 }
 
-module.exports = {
+return {
     init: function(httpServer,userSettings) {
         if (!userSettings) {
             userSettings = httpServer;
@@ -107,3 +109,6 @@ module.exports = {
     get httpNode() { return nodeApp },
     get server() { return server }
 };
+};
+
+

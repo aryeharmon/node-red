@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+ module.exports = function() {
 var clone = require("clone");
 var redUtil = require("../../util");
 var subflowInstanceRE = /^subflow:(.+)$/;
@@ -62,7 +63,7 @@ function mapEnvVarProperties(obj,prop) {
     }
 }
 
-module.exports = {
+return {
 
     diffNodes: diffNodes,
     mapEnvVarProperties: mapEnvVarProperties,
@@ -445,4 +446,5 @@ module.exports = {
 
         return diff;
     }
+}
 }

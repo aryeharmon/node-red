@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var when = require("when");
 var clone = require("clone");
 var typeRegistry = require("../registry");
@@ -494,11 +494,12 @@ function createSubflow(sf,sfn,subflows,globalSubflows,activeNodes) {
 }
 
 
-module.exports = {
+return {
     init: function(settings) {
         nodeCloseTimeout = settings.nodeCloseTimeout || 15000;
     },
     create: function(global,conf) {
         return new Flow(global,conf);
     }
+}
 }

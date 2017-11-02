@@ -22,7 +22,10 @@ var i18n;
 var settings;
 var events;
 
-module.exports = {
+
+module.exports = function() {
+
+return {
     init: function(runtime) {
         redNodes = runtime.nodes;
         log = runtime.log;
@@ -261,3 +264,4 @@ function putNode(node, enabled) {
 
     return promise;
 }
+};

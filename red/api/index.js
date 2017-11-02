@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+module.exports = function() {
 var express = require("express");
 var bodyParser = require("body-parser");
 var util = require('util');
@@ -23,7 +23,7 @@ var when = require('when');
 var cors = require('cors');
 
 var ui = require("./ui");
-var nodes = require("./nodes");
+var nodes = require("./nodes")();
 var flows = require("./flows");
 var flow = require("./flow");
 var library = require("./library");
@@ -31,7 +31,7 @@ var info = require("./info");
 var theme = require("./theme");
 var locales = require("./locales");
 var credentials = require("./credentials");
-var comms = require("./comms");
+var comms = require("./comms")();
 
 var auth = require("./auth");
 var needsPermission = auth.needsPermission;
@@ -177,7 +177,7 @@ function stop() {
     comms.stop();
     return when.resolve();
 }
-module.exports = {
+return {
     init: init,
     start: start,
     stop: stop,
@@ -192,4 +192,5 @@ module.exports = {
     },
     get adminApp() { return adminApp; },
     get server() { return server; }
+};
 };
