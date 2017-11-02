@@ -18,7 +18,7 @@ var fs = require("fs");
 var path = require("path");
 var Mustache = require("mustache");
 
-var theme = require("./theme");
+var theme = require("./theme")();
 
 var redNodes;
 

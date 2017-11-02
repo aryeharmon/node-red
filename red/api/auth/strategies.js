@@ -21,10 +21,10 @@ var passport = require("passport");
 var crypto = require("crypto");
 var util = require("util");
 
-var Tokens = require("./tokens");
-var Users = require("./users");
-var Clients = require("./clients");
-var permissions = require("./permissions");
+var Tokens = require("./tokens")();
+var Users = require("./users")();
+var Clients = require("./clients")();
+var permissions = require("./permissions")();
 
 var log;
 

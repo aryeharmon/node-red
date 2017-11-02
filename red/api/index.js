@@ -22,18 +22,18 @@ var passport = require('passport');
 var when = require('when');
 var cors = require('cors');
 
-var ui = require("./ui");
+var ui = require("./ui")();
 var nodes = require("./nodes")();
-var flows = require("./flows");
-var flow = require("./flow");
-var library = require("./library");
-var info = require("./info");
-var theme = require("./theme");
-var locales = require("./locales");
-var credentials = require("./credentials");
+var flows = require("./flows")();
+var flow = require("./flow")();
+var library = require("./library")();
+var info = require("./info")();
+var theme = require("./theme")();
+var locales = require("./locales")();
+var credentials = require("./credentials")();
 var comms = require("./comms")();
 
-var auth = require("./auth");
+var auth = require("./auth")();
 var needsPermission = auth.needsPermission;
 
 var i18n;

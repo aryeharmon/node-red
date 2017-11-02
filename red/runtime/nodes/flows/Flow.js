@@ -19,7 +19,7 @@ var clone = require("clone");
 var typeRegistry = require("../registry");
 var Log = require("../../log");
 var redUtil = require("../../util");
-var flowUtil = require("./util");
+var flowUtil = require("./util")();
 
 var nodeCloseTimeout = 15000;
 

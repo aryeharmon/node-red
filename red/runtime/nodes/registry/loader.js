@@ -19,8 +19,8 @@ var fs = require("fs");
 var path = require("path");
 var semver = require("semver");
 
-var localfilesystem = require("./localfilesystem");
-var registry = require("./registry");
+var localfilesystem = require("./localfilesystem")();
+var registry = require("./registry")();
 
 var settings;
 var runtime;

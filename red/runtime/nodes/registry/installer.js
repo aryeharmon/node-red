@@ -19,7 +19,7 @@ var when = require("when");
 var path = require("path");
 var fs = require("fs");
 
-var registry = require("./registry");
+var registry = require("./registry")();
 var log = require("../../log");
 
 var events = require("../../events");

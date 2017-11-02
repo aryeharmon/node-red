@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-var theme = require("./theme");
+var theme = require("./theme")();
 var util = require('util');
 var runtime;
 var settings;

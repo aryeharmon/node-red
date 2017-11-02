@@ -17,10 +17,10 @@
 var passport = require("passport");
 var oauth2orize = require("oauth2orize");
 
-var strategies = require("./strategies");
-var Tokens = require("./tokens");
-var Users = require("./users");
-var permissions = require("./permissions");
+var strategies = require("./strategies")();
+var Tokens = require("./tokens")();
+var Users = require("./users")();
+var permissions = require("./permissions")();
 
 var theme = require("../theme");
 

@@ -15,7 +15,7 @@
  **/
 
 var when = require("when");
-var locales = require("./locales");
+var locales = require("./locales")();
 var redNodes;
 var log;
 var i18n;

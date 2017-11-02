@@ -20,8 +20,8 @@ var when = require("when");
 
 var redUtil = require("../util");
 var Log = require("../log");
-var context = require("./context");
-var flows = require("./flows");
+var context = require("./context")();
+var flows = require("./flows")();
 
 function Node(n) {
     this.id = n.id;

@@ -17,7 +17,7 @@
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 
-var i18n = require("./i18n");
+var i18n = require("./i18n")();
 
 var levels = {
     off:    1,

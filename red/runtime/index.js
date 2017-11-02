@@ -17,10 +17,10 @@ module.exports = function() {
 var when = require('when');
 
 var redNodes = require("./nodes")();
-var storage = require("./storage");
-var log = require("./log");
-var i18n = require("./i18n");
-var events = require("./events");
+var storage = require("./storage")();
+var log = require("./log")();
+var i18n = require("./i18n")();
+var events = require("./events")();
 var settings = require("./settings")();
 
 var express = require("express");

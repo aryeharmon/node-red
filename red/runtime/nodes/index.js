@@ -20,14 +20,14 @@ var path = require("path");
 var fs = require("fs");
 var clone = require("clone");
 
-var registry = require("./registry");
-var credentials = require("./credentials");
+var registry = require("./registry")();
+var credentials = require("./credentials")();
 var flows = require("./flows")();
 var flowUtil = require("./flows/util")
-var context = require("./context");
-var Node = require("./Node");
+var context = require("./context")();
+var Node = require("./Node")();
 var log = null;
-var library = require("./library");
+var library = require("./library")();
 
 var events = require("../events");
 
