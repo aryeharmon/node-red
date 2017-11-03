@@ -14,7 +14,9 @@
  * limitations under the License.
  **/
 
-module.exports = function() {
+// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
 var when = require("when");
 var path = require("path");
 var fs = require("fs");

@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- module.exports = function() {
+ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
 var nodes = {
     "irc in":     {module:"node-red-node-irc"},
     "irc out":    {module:"node-red-node-irc"},

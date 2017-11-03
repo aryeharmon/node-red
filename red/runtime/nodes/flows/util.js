@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- module.exports = function() {
+ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
 var clone = require("clone");
 var redUtil = require("../../util")();
 var subflowInstanceRE = /^subflow:(.+)$/;

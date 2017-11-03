@@ -15,7 +15,9 @@
  **/
 
  //var UglifyJS = require("uglify-js");
- module.exports = function() {
+ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
     var that = this;
 
 var util = require("util");

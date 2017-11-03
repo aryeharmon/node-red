@@ -17,7 +17,9 @@
 var log;
 var redNodes;
 var settings;
- module.exports = function() {
+ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
 
 return {
     init: function(runtime) {

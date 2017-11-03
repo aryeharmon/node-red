@@ -16,7 +16,9 @@
 
 var log;
 var api;
- module.exports = function() {
+ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
 
 return {
     init: function(runtime) {

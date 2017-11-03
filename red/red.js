@@ -1,4 +1,4 @@
-/**
+/**xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  * Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,14 @@
  * limitations under the License.
  **/
 
+
+
 var fs = require("fs");
 var path = require('path');
 
-module.exports = function() {
+// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+module.exports = function(instance_id) {
 
 var runtime = require("./runtime")();
 var api = require("./api")();
