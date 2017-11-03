@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var fs = require('fs-extra');
 var when = require('when');
 var nodeFn = require('when/node/function');
@@ -23,7 +26,7 @@ var keys = require('when/keys');
 var fspath = require("path");
 var mkdirp = fs.mkdirs;
 
-var log = require("../log")();
+var log = require("../log")(instance_id);
 
 var promiseDir = nodeFn.lift(mkdirp);
 
@@ -442,5 +445,7 @@ var localfilesystem = {
     }
 };
 
+instances[instance_id] = localfilesystem;
 return localfilesystem;
+
 };

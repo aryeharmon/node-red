@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var clone = require("clone");
-var redUtil = require("../../util")();
+var redUtil = require("../../util")(instance_id);
 var subflowInstanceRE = /^subflow:(.+)$/;
-var typeRegistry = require("../registry")();
+var typeRegistry = require("../registry")(instance_id);
 
 function diffNodes(oldNode,newNode) {
     if (oldNode == null) {
@@ -65,7 +68,7 @@ function mapEnvVarProperties(obj,prop) {
     }
 }
 
-return {
+var result = {
 
     diffNodes: diffNodes,
     mapEnvVarProperties: mapEnvVarProperties,
@@ -449,4 +452,8 @@ return {
         return diff;
     }
 }
+
+instances[instance_id] = result;
+return result;
+
 }

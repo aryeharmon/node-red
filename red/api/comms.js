@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var ws = require("ws");
 var log;
 
@@ -50,9 +53,9 @@ function init(_server,runtime) {
 }
 
 function start() {
-    var Tokens = require("./auth/tokens")();
-    var Users = require("./auth/users")();
-    var Permissions = require("./auth/permissions")();
+    var Tokens = require("./auth/tokens")(instance_id);
+    var Users = require("./auth/users")(instance_id);
+    var Permissions = require("./auth/permissions")(instance_id);
     if (!settings.disableEditor) {
         Users.default().then(function(anonymousUser) {
             var webSocketKeepAliveTime = settings.webSocketKeepAliveTime || 15000;
@@ -228,10 +231,14 @@ function removePendingConnection(ws) {
     }
 }
 
-return {
+var result = {
     init:init,
     start:start,
     stop:stop,
     publish:publish
 }
+
+instances[instance_id] = result;
+return result;
+
 };

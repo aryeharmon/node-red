@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var passport = require("passport");
 var oauth2orize = require("oauth2orize");
 
-var strategies = require("./strategies")();
-var Tokens = require("./tokens")();
-var Users = require("./users")();
-var permissions = require("./permissions")();
+var strategies = require("./strategies")(instance_id);
+var Tokens = require("./tokens")(instance_id);
+var Users = require("./users")(instance_id);
+var permissions = require("./permissions")(instance_id);
 
-var theme = require("../theme")();
+var theme = require("../theme")(instance_id);
 
 var settings = null;
 var log = null
@@ -136,7 +139,7 @@ function completeVerify(profile,done) {
     });
 }
 
-return {
+var result =  {
     init: init,
     needsPermission: needsPermission,
     ensureClientSecret: ensureClientSecret,
@@ -200,4 +203,8 @@ return {
 
     }
 }
+
+instances[instance_id] = result;
+return result;
+
 };

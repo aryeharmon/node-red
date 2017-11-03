@@ -14,14 +14,19 @@
  * limitations under the License.
  **/
 
+
+var instances = {};
+module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
+
 var log;
 var redNodes;
 var settings;
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ 
 
-module.exports = function(instance_id) {
-
-return {
+var result =  {
     init: function(runtime) {
         settings = runtime.settings;
         redNodes = runtime.nodes;
@@ -88,4 +93,8 @@ return {
         }
     }
 }
+
+instances[instance_id] = result;
+return result;
+
 };

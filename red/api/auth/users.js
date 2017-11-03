@@ -13,9 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var when = require("when");
 var util = require("util");
@@ -110,10 +113,14 @@ function init(config) {
     }
 }
 
-return {
+var result = {
     init: init,
     get: function(username) { return api.get(username) },
     authenticate: function() { return api.authenticate.apply(null, arguments) },
     default: function() { return api.default(); }
 };
+
+instances[instance_id] = result;
+return result;
+
 };

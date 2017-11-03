@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var when = require("when");
 var clone = require("clone");
-var typeRegistry = require("../registry")();
-var Log = require("../../log")();
-var redUtil = require("../../util")();
-var flowUtil = require("./util")();
+var typeRegistry = require("../registry")(instance_id);
+var Log = require("../../log")(instance_id);
+var redUtil = require("../../util")(instance_id);
+var flowUtil = require("./util")(instance_id);
 
 var nodeCloseTimeout = 15000;
 
@@ -382,7 +385,7 @@ function createSubflow(sf,sfn,subflows,globalSubflows,activeNodes) {
     }
 
     // Create a subflow node to accept inbound messages and route appropriately
-    var Node = require("../Node")();
+    var Node = require("../Node")(instance_id);
     var subflowInstance = {
         id: sfn.id,
         type: sfn.type,
@@ -496,7 +499,7 @@ function createSubflow(sf,sfn,subflows,globalSubflows,activeNodes) {
 }
 
 
-return {
+var result = {
     init: function(settings) {
         nodeCloseTimeout = settings.nodeCloseTimeout || 15000;
     },
@@ -504,4 +507,7 @@ return {
         return new Flow(global,conf);
     }
 }
+instances[instance_id] = result;
+return result;
+
 }

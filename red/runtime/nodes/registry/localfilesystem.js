@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var when = require("when");
 var fs = require("fs");
 var path = require("path");
@@ -305,10 +308,14 @@ function getModuleFiles(module) {
 }
 
 
-return {
+var result = {
     init: init,
     getNodeFiles: getNodeFiles,
     getLocalFile: getLocalFile,
     getModuleFiles: getModuleFiles
 }
+
+instances[instance_id] = result;
+return result;
+
 };

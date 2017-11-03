@@ -14,9 +14,12 @@
  * limitations under the License.
  **/
 
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var when = require("when");
 var clone = require("clone");
 var assert = require("assert");
@@ -154,6 +157,7 @@ var persistentSettings = {
     }
 }
 
+instances[instance_id] = persistentSettings;
 return persistentSettings;
 };
 

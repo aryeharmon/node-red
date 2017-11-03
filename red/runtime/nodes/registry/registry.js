@@ -15,9 +15,12 @@
  **/
 
  //var UglifyJS = require("uglify-js");
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
     var that = this;
 
 var util = require("util");
@@ -25,7 +28,7 @@ var when = require("when");
 var path = require("path");
 var fs = require("fs");
 
-var events = require("../../events")();
+var events = require("../../events")(instance_id);
 
 var settings;
 
@@ -48,7 +51,7 @@ function init(_settings,_loader) {
     nodeConstructors = {};
     nodeList = [];
     nodeConfigCache = null;
-    Node = require("../Node")();
+    Node = require("../Node")(instance_id);
     events.removeListener("node-icon-dir",nodeIconDir);
     events.on("node-icon-dir",nodeIconDir);
 
@@ -648,6 +651,7 @@ var registry = {
     cleanModuleList: cleanModuleList
 };
 
+instances[instance_id] = registry;
 return registry;
 
 };

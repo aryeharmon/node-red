@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
-var theme = require("./theme")();
+var theme = require("./theme")(instance_id);
 var util = require('util');
 var runtime;
 var settings;
 
-return {
+var result = {
     init: function(_runtime) {
         runtime = _runtime;
         settings = runtime.settings;
@@ -58,4 +61,9 @@ return {
         res.json(safeSettings);
     }
 }
+
+
+instances[instance_id] = result;
+return result;
+
 };

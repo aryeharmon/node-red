@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var when = require("when");
-var locales = require("./locales")();
+var locales = require("./locales")(instance_id);
 var redNodes;
 var log;
 var i18n;
 var settings;
 var events;
 
-return {
+var result =  {
     init: function(runtime) {
         redNodes = runtime.nodes;
         log = runtime.log;
@@ -264,4 +267,8 @@ function putNode(node, enabled) {
 
     return promise;
 }
+
+instances[instance_id] = result;
+return result;
+
 };

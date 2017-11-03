@@ -13,25 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var when = require("when");
 var path = require("path");
 var fs = require("fs");
 var clone = require("clone");
 
-var registry = require("./registry")();
-var credentials = require("./credentials")();
-var flows = require("./flows")();
+var registry = require("./registry")(instance_id);
+var credentials = require("./credentials")(instance_id);
+var flows = require("./flows")(instance_id);
 var flowUtil = require("./flows/util")
-var context = require("./context")();
-var Node = require("./Node")();
+var context = require("./context")(instance_id);
+var Node = require("./Node")(instance_id);
 var log = null;
-var library = require("./library")();
+var library = require("./library")(instance_id);
 
-var events = require("../events")();
+var events = require("../events")(instance_id);
 
 var settings;
 
@@ -122,7 +125,7 @@ function uninstallModule(module) {
     }
 }
 
-return {
+var result =  {
     // Lifecycle
     init: init,
     load: registry.load,
@@ -177,4 +180,8 @@ return {
     deleteCredentials: credentials.delete,
     getCredentialDefinition: credentials.getDefinition
 };
+
+instances[instance_id] = result;
+return result;
+
 };

@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var BearerStrategy = require('passport-http-bearer').Strategy;
 var ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
@@ -24,10 +27,10 @@ var passport = require("passport");
 var crypto = require("crypto");
 var util = require("util");
 
-var Tokens = require("./tokens")();
-var Users = require("./users")();
-var Clients = require("./clients")();
-var permissions = require("./permissions")();
+var Tokens = require("./tokens")(instance_id);
+var Users = require("./users")(instance_id);
+var Clients = require("./clients")(instance_id);
+var permissions = require("./permissions")(instance_id);
 
 var log;
 
@@ -126,7 +129,7 @@ AnonymousStrategy.prototype.authenticate = function(req) {
     });
 }
 
-return {
+var result = {
     init: function(runtime) {
         log = runtime.log;
     },
@@ -135,4 +138,8 @@ return {
     passwordTokenExchange: passwordTokenExchange,
     anonymousStrategy: new AnonymousStrategy()
 }
+
+instances[instance_id] = result;
+return result;
+
 };

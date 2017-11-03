@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var express = require('express');
 var fs = require("fs");
 var path = require("path");
 var Mustache = require("mustache");
 
-var theme = require("./theme")();
+var theme = require("./theme")(instance_id);
 
 var redNodes;
 
 var templateDir = path.resolve(__dirname+"/../../editor/templates");
 var editorTemplate;
 
-return {
+var result = {
     init: function(runtime) {
         redNodes = runtime.nodes;
         editorTemplate = fs.readFileSync(path.join(templateDir,"index.mst"),"utf8");
@@ -57,4 +60,9 @@ return {
     },
     editorResources: express.static(__dirname + '/../../public')
 };
+
+instances[instance_id] = result;
+return result;
+
+
 };

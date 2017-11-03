@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var fs = require('fs');
 var fspath = require('path');
 var when = require('when');
@@ -103,9 +106,13 @@ function getExampleFlowPath(module,path) {
     return null;
 }
 
-return {
+var result =  {
     init: init,
     getExampleFlows: getExampleFlows,
     getExampleFlowPath: getExampleFlowPath
 }
+
+instances[instance_id] = result;
+return result;
+
 };

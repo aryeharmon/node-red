@@ -13,10 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var events = require("events"); 
 
-return new events.EventEmitter(); 
+var result = new events.EventEmitter(); 
+
+
+instances[instance_id] = result;
+return result;
+
 };

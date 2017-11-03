@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var when = require('when');
 
-var redNodes = require("./nodes")();
-var storage = require("./storage")();
-var log = require("./log")();
-var i18n = require("./i18n")();
-var events = require("./events")();
-var settings = require("./settings")();
+var redNodes = require("./nodes")(instance_id);
+var storage = require("./storage")(instance_id);
+var log = require("./log")(instance_id);
+var i18n = require("./i18n")(instance_id);
+var events = require("./events")(instance_id);
+var settings = require("./settings")(instance_id);
 
 var express = require("express");
 var path = require('path');
@@ -101,7 +104,7 @@ function start() {
             }
             log.info("\n\n"+log._("runtime.welcome")+"\n===================\n");
             if (settings.version) {
-                log.info(log._("runtime.version",{component:"Node-RED",version:"v"+settings.version}));
+                log.info(log._("aaaaaaaaruntime.version",{component:"Node-RED",version:"v"+settings.version}));
             }
             log.info(log._("runtime.version",{component:"Node.js ",version:process.version}));
             if (settings.UNSUPPORTED_VERSION) {
@@ -250,5 +253,8 @@ var runtime  = {
         return started;
     }
 }
+
+
+instances[instance_id] = runtime;
 return runtime;
 };

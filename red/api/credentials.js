@@ -16,11 +16,14 @@
 
 var log;
 var api;
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
-return {
+var result =  {
     init: function(runtime) {
         log = runtime.log;
         api = runtime.nodes;
@@ -53,4 +56,8 @@ return {
         res.json(sendCredentials);
     }
 }
+
+instances[instance_id] = result;
+return result;
+
 };

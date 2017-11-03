@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var clone = require("clone");
 var when = require("when");
-var util = require("../util")();
+var util = require("../util")(instance_id);
 
 function createContext(id,seed) {
     var data = seed || {};
@@ -83,7 +86,7 @@ function clean(flowConfig) {
         }
     }
 }
-return {
+var result =  {
     init: function(settings) {
         globalContext = createContext("global",settings.functionGlobalContext || {});
     },
@@ -91,4 +94,8 @@ return {
     delete: deleteContext,
     clean:clean
 };
+
+instances[instance_id] = result;
+return result;
+
 };

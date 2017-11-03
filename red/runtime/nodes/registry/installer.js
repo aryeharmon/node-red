@@ -14,17 +14,20 @@
  * limitations under the License.
  **/
 
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var when = require("when");
 var path = require("path");
 var fs = require("fs");
 
-var registry = require("./registry")();
-var log = require("../../log")();
+var registry = require("./registry")(instance_id);
+var log = require("../../log")(instance_id);
 
-var events = require("../../events")();
+var events = require("../../events")(instance_id);
 
 var child_process = require('child_process');
 var npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -234,7 +237,7 @@ function checkPrereq() {
         })
     }
 }
-return {
+var result = {
     init: init,
     checkPrereq: checkPrereq,
     installModule: installModule,
@@ -243,4 +246,8 @@ return {
         return paletteEditorEnabled
     }
 }
+
+instances[instance_id] = result;
+return result;
+
 };

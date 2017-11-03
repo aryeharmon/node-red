@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 var when = require("when");
 
-var redUtil = require("../util")();
-var Log = require("../log")();
-var context = require("./context")();
-var flows = require("./flows")();
+var redUtil = require("../util")(instance_id);
+var Log = require("../log")(instance_id);
+var context = require("./context")(instance_id);
+var flows = require("./flows")(instance_id);
 
 function Node(n) {
     this.id = n.id;
@@ -284,5 +287,8 @@ Node.prototype.metric = function(eventname, msg, metricValue) {
 Node.prototype.status = function(status) {
     flows.handleStatus(this,status);
 };
+
+instances[instance_id] = Node;
 return Node;
+
 };

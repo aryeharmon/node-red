@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var fs = require('fs');
 var fspath = require('path');
@@ -25,7 +28,7 @@ var redApp = null;
 var storage;
 var log;
 var redNodes;
-var needsPermission = require("./auth").needsPermission;
+var needsPermission = require("./auth")(instance_id).needsPermission;
 
 function createLibrary(type) {
     if (redApp) {
@@ -77,7 +80,7 @@ function createLibrary(type) {
     }
 }
 
-return {
+var result =  {
     init: function(app,runtime) {
         redApp = app;
         log = runtime.log;
@@ -163,4 +166,8 @@ return {
         });
     }
 }
+
+instances[instance_id] = result;
+return result;
+
 };

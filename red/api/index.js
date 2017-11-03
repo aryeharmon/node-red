@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var express = require("express");
 var bodyParser = require("body-parser");
 var util = require('util');
@@ -24,18 +27,18 @@ var passport = require('passport');
 var when = require('when');
 var cors = require('cors');
 
-var ui = require("./ui")();
-var nodes = require("./nodes")();
-var flows = require("./flows")();
-var flow = require("./flow")();
-var library = require("./library")();
-var info = require("./info")();
-var theme = require("./theme")();
-var locales = require("./locales")();
-var credentials = require("./credentials")();
-var comms = require("./comms")();
+var ui = require("./ui")(instance_id);
+var nodes = require("./nodes")(instance_id);
+var flows = require("./flows")(instance_id);
+var flow = require("./flow")(instance_id);
+var library = require("./library")(instance_id);
+var info = require("./info")(instance_id);
+var theme = require("./theme")(instance_id);
+var locales = require("./locales")(instance_id);
+var credentials = require("./credentials")(instance_id);
+var comms = require("./comms")(instance_id);
 
-var auth = require("./auth")();
+var auth = require("./auth")(instance_id);
 var needsPermission = auth.needsPermission;
 
 var i18n;
@@ -179,7 +182,7 @@ function stop() {
     comms.stop();
     return when.resolve();
 }
-return {
+var result = {
     init: init,
     start: start,
     stop: stop,
@@ -195,4 +198,8 @@ return {
     get adminApp() { return adminApp; },
     get server() { return server; }
 };
+
+instances[instance_id] = result;
+return result;
+
 };

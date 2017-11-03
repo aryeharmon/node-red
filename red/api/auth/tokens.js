@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var when = require("when");
 
@@ -65,7 +68,7 @@ function loadSessions() {
     return loadedSessions;
 }
 
-return {
+var result = {
     init: function(adminAuthSettings, _storage) {
         storage = _storage;
         sessionExpiryTime = adminAuthSettings.sessionExpiryTime || 604800; // 1 week in seconds
@@ -113,4 +116,10 @@ return {
         });
     }
 }
+
+
+instances[instance_id] = result;
+return result;
+
+
 };

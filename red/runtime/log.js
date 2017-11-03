@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 
-var i18n = require("./i18n")();
+var i18n = require("./i18n")(instance_id);
 
 var levels = {
     off:    1,
@@ -166,6 +169,8 @@ var log = {
 }
 
 log["_"] = i18n._;
+console.log(i18n._("runtime.welcome"),55555555, i18n._)
 
+instances[instance_id] = log;
 return log;
 };

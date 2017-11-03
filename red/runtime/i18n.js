@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
-module.exports = function(instance_id) {
+// module.exports = function(instance_id) {
+    // if (instances[instance_id]) {
+    //     return instances[instance_id];
+    // }
 var i18n = require("i18next");
 var when = require("when");
 var path = require("path");
@@ -132,5 +135,9 @@ obj['_'] = function() {
     return i18n.t.apply(null,arguments);
 }
 
-return obj;
-};
+var result = obj;
+
+console.log(obj._)
+
+module.exports = function(asf) {return result};
+// };

@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var nodes = {
     "irc in":     {module:"node-red-node-irc"},
     "irc out":    {module:"node-red-node-irc"},
@@ -44,9 +47,12 @@ var nodes = {
     "feedparse": {module:"node-red-node-feedparser"}
 }
 
-return {
+var result = {
     get: function(id) {
         return nodes[id];
     }
 }
+instances[instance_id] = result;
+return result;
+
 };

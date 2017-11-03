@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var that = this;
 
 var fs = require('fs');
@@ -30,7 +33,7 @@ function determineLangFromHeaders(acceptedLanguages){
     }
     return lang;
 }
-return {
+var result = {
     init: function(runtime) {
         that.i18n = runtime.i18n;
         redNodes = runtime.nodes;
@@ -62,4 +65,8 @@ return {
     },
     determineLangFromHeaders: determineLangFromHeaders
 }
+
+instances[instance_id] = result;
+return result;
+
 };

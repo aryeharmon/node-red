@@ -13,23 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var clone = require("clone");
 var when = require("when");
 
-var Flow = require('./Flow')();
+var Flow = require('./Flow')(instance_id);
 
-var typeRegistry = require("../registry")();
+var typeRegistry = require("../registry")(instance_id);
 var context = require("../context")
-var credentials = require("../credentials")();
+var credentials = require("../credentials")(instance_id);
 
-var flowUtil = require("./util")();
-var log = require("../../log")();
-var events = require("../../events")();
-var redUtil = require("../../util")();
-var deprecated = require("../registry/deprecated")();
+var flowUtil = require("./util")(instance_id);
+var log = require("../../log")(instance_id);
+var events = require("../../events")(instance_id);
+var redUtil = require("../../util")(instance_id);
+var deprecated = require("../registry/deprecated")(instance_id);
 
 var storage = null;
 var settings = null;
@@ -624,7 +627,7 @@ function removeFlow(id) {
     });
 }
 
-return {
+var result =  {
     init: init,
 
     /**
@@ -675,4 +678,9 @@ return {
     enableFlow:null
 
 };
+
+
+instances[instance_id] = result;
+return result;
+
 };

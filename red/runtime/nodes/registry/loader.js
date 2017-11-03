@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 var when = require("when");
 var fs = require("fs");
 var path = require("path");
 var semver = require("semver");
 
-var localfilesystem = require("./localfilesystem")();
-var registry = require("./registry")();
+var localfilesystem = require("./localfilesystem")(instance_id);
+var registry = require("./registry")(instance_id);
 
 var settings;
 var runtime;
@@ -406,11 +409,15 @@ function getNodeHelp(node,lang) {
     return node.help[lang];
 }
 
-return {
+var result =  {
     init: init,
     load: load,
     addModule: addModule,
     loadNodeSet: loadNodeSet,
     getNodeHelp: getNodeHelp
 }
+
+instances[instance_id] = result;
+return result;
+
 };

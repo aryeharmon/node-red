@@ -19,12 +19,14 @@
 var fs = require("fs");
 var path = require('path');
 
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+var instances = {};
 
-module.exports = function(instance_id) {
+module.exports = function() {
 
-var runtime = require("./runtime")();
-var api = require("./api")();
+var instance_id = Math.random();
+
+var runtime = require("./runtime")(instance_id);
+var api = require("./api")(instance_id);
 
 process.env.NODE_RED_HOME = process.env.NODE_RED_HOME || path.resolve(__dirname+"/..");
 

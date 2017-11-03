@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ var instances = {};
 
 module.exports = function(instance_id) {
+    if (instances[instance_id]) {
+        return instances[instance_id];
+    }
 
 var express = require("express");
 var util = require("util");
@@ -80,7 +83,7 @@ function serveFilesFromTheme(themeValue, themeApp, directory) {
     return result
 }
 
-return {
+var result = {
     init: function(runtime) {
         var settings = runtime.settings;
         themeContext = clone(defaultContext);
@@ -197,4 +200,9 @@ return {
         return serveFile(themeApp,baseUrl,file);
     }
 }
+
+instances[instance_id] = result;
+return result;
+
+
 };
