@@ -25,7 +25,7 @@ var when = require("when");
 var Flow = require('./Flow')(instance_id);
 
 var typeRegistry = require("../registry")(instance_id);
-var context = require("../context")
+var context = require("../context")(instance_id);
 var credentials = require("../credentials")(instance_id);
 
 var flowUtil = require("./util")(instance_id);
