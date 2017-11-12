@@ -246,7 +246,7 @@ var runtime  = {
     storage: storage,
     events: events,
     nodes: redNodes,
-    util: require("./util"),
+    util: require("./util")(instance_id),
     get adminApi() { return adminApi },
     get nodeApp() { return nodeApp },
     isStarted: function() {

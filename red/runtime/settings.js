@@ -23,8 +23,8 @@ module.exports = function(instance_id) {
 var when = require("when");
 var clone = require("clone");
 var assert = require("assert");
-var log = require("./log");
-var util = require("./util");
+var log = require("./log")(instance_id);
+var util = require("./util")(instance_id);
 
 var userSettings = null;
 var globalSettings = null;
