@@ -256,7 +256,8 @@ module.exports = function(RED) {
 
             this.on("close",function() {
                 var node = this;
-                RED.httpNode._router.stack.forEach(function(route,i,routes) {
+
+                RED.httpNode.stack.forEach(function(route,i,routes) {
                     if (route.route && route.route.path === node.url && route.route.methods[node.method]) {
                         routes.splice(i,1);
                     }

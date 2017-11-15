@@ -64,7 +64,7 @@ function init(userSettings,_adminApi) {
     log.init(userSettings);
     settings.init(userSettings);
 
-    nodeApp = express();
+    nodeApp = express.Router();
 
     if (_adminApi) {
         adminApi = _adminApi;
