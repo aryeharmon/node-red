@@ -192,7 +192,7 @@ module.exports = function(RED) {
                 res.sendStatus(500);
             };
 
-            this.callback = function(req,res) {
+            this.callback = function(req,res, next) {
                 var msgid = RED.util.generateId();
                 res._msgid = msgid;
                 if (node.method.match(/^(post|delete|put|options|patch)$/)) {
