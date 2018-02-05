@@ -20,6 +20,8 @@ module.exports = function(RED) {
     var vm = require("vm");
     var cheerio = require('cheerio');
     var md5 = require('md5');
+    var extend = require('extend');
+    var _ = require('lodash');
 
     function sendResults(node,_msgid,msgs) {
         if (msgs == null) {
