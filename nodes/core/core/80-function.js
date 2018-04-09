@@ -207,6 +207,7 @@ module.exports = function(RED) {
                     var msg_result = eval("(function(msg){" + this.func + "})(msg)");
                     node.send(msg_result || msg);
                 } catch(err) {
+                    node.error(err.toString());
                     node.status({fill: "red", shape: "ring", text: err.toString()});
                 }
 
