@@ -26,7 +26,7 @@
         </select>
     </div>
     <div class="form-row">
-        <label for="node-input-layout"><i class="fa fa-wpforms"></i> <span data-i18n="httpin.label.layout"></span></label>
+        <label for="node-input-layout"><i class="fa fa-wpforms"></i> Layout</label>
         <select type="text" id="node-input-layout" style="width:70%;"></select>
     </div>
     <div class="form-row form-row-http-in-upload hide">
@@ -190,6 +190,8 @@ msg.cookies = {
             return this.name?"node_label_italic":"";
         },
         oneditprepare: function() {
+            var node = this;
+            
             var root = RED.settings.httpNodeRoot;
             if (root.slice(-1) == "/") {
                 root = root.slice(0,-1);
@@ -216,8 +218,9 @@ msg.cookies = {
                 for (var i = 0; i < data.length; i++) {
                     $('#node-input-layout').append(`<option value="${data[i].id}">${data[i].name}</option>`)
                 }
-                $('#node-input-layout').val(this.layout)
+                $('#node-input-layout').val(node.layout)
             });
+
 
 
 
