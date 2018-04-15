@@ -18,6 +18,7 @@ module.exports = function(RED) {
     "use strict";
     var bodyParser = require("body-parser");
     var multer = require("multer");
+    var cheerio = require("cheerio");
     var cookieParser = require("cookie-parser");
     var getBody = require('raw-body');
     var cors = require('cors');
@@ -171,6 +172,7 @@ module.exports = function(RED) {
 
     function HTTPIn(n) {
         RED.nodes.createNode(this,n);
+
         if (RED.settings.httpNodeRoot !== false) {
 
             if (!n.url) {
@@ -266,6 +268,25 @@ module.exports = function(RED) {
         } else {
             this.warn(RED._("httpin.errors.not-created"));
         }
+
+        if (n.layout) {
+          node.output_settings = [];
+          node.input_settings = [];
+          RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findOne({where: {id: n.layout}}).then(function(layout) {
+            var $ = cheerio.load(layout.html || '<div></div>');
+
+            $("form").each(function() {
+              $(this).find(':input').each(function(input) {
+                var name = $(this).attr('name');
+                if (name) {
+                  node.output_settings.push(name);
+                }
+              })
+            });
+
+          });
+        }
+
     }
     RED.nodes.registerType("http in",HTTPIn);
 
@@ -346,7 +367,13 @@ module.exports = function(RED) {
     RED.nodes.registerType("http response",HTTPOut);
 
     RED.httpAdmin.get('/get-layouts', function(req, res, next) {
-      RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findAll({where: {}, raw: true}).then(function(layouts) {
+      if (RED.settings.functionGlobalContext.site_id) {
+        var where = {site_id: RED.settings.functionGlobalContext.site_id};
+      } else {
+        var where = {};
+      }
+
+      RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findAll({where: where, raw: true}).then(function(layouts) {
         res.json(layouts.map(function(layout) {
           return {
             id: layout.id,
