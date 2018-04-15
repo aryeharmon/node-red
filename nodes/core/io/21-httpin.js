@@ -270,8 +270,8 @@ module.exports = function(RED) {
         }
 
         if (n.layout) {
-          node.output_settings = [];
-          node.input_settings = [];
+          n.output_settings = [];
+          n.input_settings = [];
           RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findOne({where: {id: n.layout}}).then(function(layout) {
             var $ = cheerio.load(layout.html || '<div></div>');
 
@@ -279,7 +279,7 @@ module.exports = function(RED) {
               $(this).find(':input').each(function(input) {
                 var name = $(this).attr('name');
                 if (name) {
-                  node.output_settings.push(name);
+                  n.output_settings.push(name);
                 }
               })
             });
