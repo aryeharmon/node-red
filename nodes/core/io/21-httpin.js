@@ -173,6 +173,9 @@ module.exports = function(RED) {
     function HTTPIn(n) {
         RED.nodes.createNode(this,n);
 
+        n.output_settings = [];
+        n.input_settings = [];
+
         if (RED.settings.httpNodeRoot !== false) {
 
             if (!n.url) {
@@ -186,6 +189,9 @@ module.exports = function(RED) {
             this.method = n.method;
             this.upload = n.upload;
             this.swaggerDoc = n.swaggerDoc;
+            this.layout = n.layout;
+            this.output_settings = n.output_settings;
+            this.input_settings = n.input_settings;
 
             var node = this;
 
@@ -270,8 +276,6 @@ module.exports = function(RED) {
         }
 
         if (n.layout) {
-          n.output_settings = [];
-          n.input_settings = [];
           RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findOne({where: {id: n.layout}}).then(function(layout) {
             var $ = cheerio.load(layout.html || '<div></div>');
 
@@ -280,6 +284,7 @@ module.exports = function(RED) {
                 var name = $(this).attr('name');
                 if (name) {
                   n.output_settings.push(name);
+                  console.log(name);
                 }
               })
             });
