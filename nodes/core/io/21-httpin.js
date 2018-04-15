@@ -344,4 +344,15 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("http response",HTTPOut);
+
+    RED.httpAdmin.get('/get-layouts', function(req, res, next) {
+      RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findAll({where: {}, raw: true}).then(function(layouts) {
+        res.json(layouts.map(function(layout) {
+          return {
+            id: layout.id,
+            name: layout.name,
+          };
+        }))
+      });
+    });
 }
