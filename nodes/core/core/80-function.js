@@ -202,7 +202,7 @@ module.exports = function(RED) {
         try {
             this.script = vm.createScript(functionText);
             
-            node.func = eval("function(msg){" + this.func + "}");
+            eval("node.func = function(msg){" + this.func + "}");
             
             this.on("input", function(msg) {
 
