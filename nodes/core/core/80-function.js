@@ -201,10 +201,13 @@ module.exports = function(RED) {
         var context = vm.createContext(sandbox);
         try {
             this.script = vm.createScript(functionText);
+            
+            node.func = eval("function(msg){" + this.func + "}");
+            
             this.on("input", function(msg) {
 
                 try {
-                    var msg_result = eval("(function(msg){" + this.func + "})(msg)");
+                    var msg_result = node.func(msg);
                     node.send(msg_result || msg);
                 } catch(err) {
                     node.error(err.toString());
