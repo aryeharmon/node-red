@@ -34,6 +34,11 @@
         <input type="checkbox" id="node-input-upload" style="display: inline-block; width: auto; vertical-align: top;">
         <label for="node-input-upload" style="width: 70%;" data-i18n="httpin.label.upload"></label>
     </div>
+    <div class="form-row form-row-http-in-must_log_in">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-must_log_in" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-must_log_in" style="width: 70%;">Account must be logged in</label>
+    </div>
     <div class="form-row">
         <label for="node-input-url"><i class="fa fa-globe"></i> <span data-i18n="httpin.label.url"></span></label>
         <input id="node-input-url" type="text" placeholder="/url">
@@ -163,6 +168,7 @@ msg.cookies = {
             method: {value:"get",required:true},
             layout: {value: "",required:false},
             upload: {value:false},
+          must_log_in: {value: false},
             swaggerDoc: {type:"swagger-doc", required:false}
         },
         inputs:0,
