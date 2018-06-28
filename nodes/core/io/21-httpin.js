@@ -177,7 +177,7 @@ module.exports = function(RED) {
         n.input_settings = [];
 
         if (RED.settings.httpNodeRoot !== false) {
-
+            var that = this;
             if (!n.url) {
                 this.warn(RED._("httpin.errors.missing-path"));
                 return;
@@ -188,6 +188,7 @@ module.exports = function(RED) {
             }
             this.method = n.method;
             this.upload = n.upload;
+            this.must_log_in = n.must_log_in;
             this.swaggerDoc = n.swaggerDoc;
             this.layout = n.layout;
             this.output_settings = n.output_settings;
@@ -201,6 +202,14 @@ module.exports = function(RED) {
             };
 
             this.callback = function(req,res, next) {
+                
+                if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
+                    req.flash('error', 'you must login in order to access this area');
+                    res.redirect('login');
+                    node.status({text: 'user not logged in.'})
+                    return;
+                }
+                
                 var msgid = RED.util.generateId();
                 res._msgid = msgid;
                 if (node.method.match(/^(post|delete|put|options|patch)$/)) {
