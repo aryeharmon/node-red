@@ -14,6 +14,9 @@
  * limitations under the License.
  **/
 
+var Recaptcha = require('express-recaptcha').Recaptcha;
+var recaptcha = new Recaptcha(process.env.RECAPTCHA_SITE_KEY, process.env.RECAPTCHA_SECRET_KEY)
+
 module.exports = function(RED) {
     "use strict";
     var bodyParser = require("body-parser");
@@ -189,6 +192,7 @@ module.exports = function(RED) {
             this.method = n.method;
             this.upload = n.upload;
             this.must_log_in = n.must_log_in;
+            this.verify_captcha = n.verify_captcha;
             this.swaggerDoc = n.swaggerDoc;
             this.layout = n.layout;
             this.output_settings = n.output_settings;
@@ -202,7 +206,13 @@ module.exports = function(RED) {
             };
 
             this.callback = function(req,res, next) {
-                
+
+                if (that.verify_captcha && req.recaptcha.error) {
+			req.flash('error', 'Invalid captcha.');
+			res.redirect('back');
+			node.status({text: 'invalid captcha.'})
+			return;
+		}
                 if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
                     req.flash('error', 'you must login in order to access this area');
                     res.redirect('login');
@@ -262,7 +272,7 @@ module.exports = function(RED) {
             if (this.method == "get") {
                 RED.httpNode.get(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,this.callback,this.errorHandler);
             } else if (this.method == "post") {
-                RED.httpNode.post(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,this.callback,this.errorHandler);
+                RED.httpNode.post(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,recaptcha.middleware.verify,this.callback,this.errorHandler);
             } else if (this.method == "put") {
                 RED.httpNode.put(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
             } else if (this.method == "patch") {
