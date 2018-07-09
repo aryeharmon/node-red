@@ -34,6 +34,11 @@
         <input type="checkbox" id="node-input-upload" style="display: inline-block; width: auto; vertical-align: top;">
         <label for="node-input-upload" style="width: 70%;" data-i18n="httpin.label.upload"></label>
     </div>
+    <div class="form-row form-row-http-in-verify_captcha">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-verify_captcha" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-verify_captcha" style="width: 70%;">Verify Captcha</label>
+    </div>
     <div class="form-row form-row-http-in-must_log_in">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-must_log_in" style="display: inline-block; width: auto; vertical-align: top;">
@@ -168,7 +173,8 @@ msg.cookies = {
             method: {value:"get",required:true},
             layout: {value: "",required:false},
             upload: {value:false},
-          must_log_in: {value: false},
+            must_log_in: {value: false},
+	    verify_captcha: {value: false},
             swaggerDoc: {type:"swagger-doc", required:false}
         },
         inputs:0,
