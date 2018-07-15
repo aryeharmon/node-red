@@ -357,7 +357,7 @@ RED.user = (function() {
                     for (;i<data.prompts.length;i++) {
                         var field = data.prompts[i];
                         var row = $("<div/>",{class:"form-row"});
-                        $('<label for="node-dialog-login-'+field.id+'">'+field.label+':</label><br/>').appendTo(row);
+                        $('<label for="node-dialog-login-'+field.id+'">'+RED._(field.label)+':</label><br/>').appendTo(row);
                         var input = $('<input style="width: 100%" id="node-dialog-login-'+field.id+'" type="'+field.type+'" tabIndex="'+(i+1)+'"/>').appendTo(row);
 
                         if (i<data.prompts.length-1) {
@@ -2238,6 +2238,15 @@ RED.nodes = (function() {
         var typeToId = {};
         var nodeDefinitions = {};
 
+        nodeDefinitions['tab'] = {
+            defaults: {
+                label: {value:""},
+                disabled: {value: false},
+                info: {value: ""}
+            }
+        };
+
+
         var exports = {
             setModulePendingUpdated: function(module,version) {
                 moduleList[module].pending_version = version;
@@ -2471,14 +2480,7 @@ RED.nodes = (function() {
 
     function addWorkspace(ws) {
         workspaces[ws.id] = ws;
-        ws._def = {
-            defaults: {
-                label: {value:""},
-                disabled: {value: false},
-                info: {value: ""}
-            }
-        };
-
+        ws._def = RED.nodes.getType('tab');
         workspacesOrder.push(ws.id);
     }
     function getWorkspace(id) {
@@ -3014,7 +3016,7 @@ RED.nodes = (function() {
 
         // Add a tab if there isn't one there already
         if (defaultWorkspace == null) {
-            defaultWorkspace = { type:"tab", id:getID(), label:RED._('workspace.defaultName',{number:1})};
+            defaultWorkspace = { type:"tab", id:getID(), disabled: false, info:"",  label:RED._('workspace.defaultName',{number:1})};
             addWorkspace(defaultWorkspace);
             RED.workspaces.add(defaultWorkspace);
             new_workspaces.push(defaultWorkspace);
@@ -3494,6 +3496,9 @@ RED.nodes = (function() {
                 cb(nodes[n]);
             }
         },
+        getLinks: function() {
+            return links;
+        },
         eachLink: function(cb) {
             for (var l=0;l<links.length;l++) {
                 cb(links[l]);
@@ -3963,24 +3968,58 @@ RED.utils = (function() {
         }
         return result;
     }
-    function makeExpandable(el,onexpand,expand) {
+    function makeExpandable(el,onbuild,ontoggle,expand) {
         el.addClass("debug-message-expandable");
+        el.prop('toggle',function() {
+            return function(state) {
+                var parent = el.parent();
+                if (parent.hasClass('collapsed')) {
+                    if (state) {
+                        if (onbuild && !parent.hasClass('built')) {
+                            onbuild();
+                            parent.addClass('built');
+                        }
+                        parent.removeClass('collapsed');
+                        return true;
+                    }
+                } else {
+                    if (!state) {
+                        parent.addClass('collapsed');
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
         el.click(function(e) {
             var parent = $(this).parent();
-            if (parent.hasClass('collapsed')) {
-                if (onexpand && !parent.hasClass('built')) {
-                    onexpand();
-                    parent.addClass('built');
+            var currentState = !parent.hasClass('collapsed');
+            if ($(this).prop('toggle')(!currentState)) {
+                if (ontoggle) {
+                    ontoggle(!currentState);
                 }
-                parent.removeClass('collapsed');
-            } else {
-                parent.addClass('collapsed');
             }
+            // if (parent.hasClass('collapsed')) {
+            //     if (onbuild && !parent.hasClass('built')) {
+            //         onbuild();
+            //         parent.addClass('built');
+            //     }
+            //     if (ontoggle) {
+            //         ontoggle(true);
+            //     }
+            //     parent.removeClass('collapsed');
+            // } else {
+            //     parent.addClass('collapsed');
+            //     if (ontoggle) {
+            //         ontoggle(false);
+            //     }
+            // }
             e.preventDefault();
         });
         if (expand) {
             el.click();
         }
+
     }
 
     var pinnedPaths = {};
@@ -4102,10 +4141,23 @@ RED.utils = (function() {
         }
     }
 
-    function buildMessageElement(obj,key,typeHint,hideKey,path,sourceId,rootPath,expandPaths) {
+    function buildMessageElement(obj,options) {
+        options = options || {};
+        var key = options.key;
+        var typeHint = options.typeHint;
+        var hideKey = options.hideKey;
+        var path = options.path;
+        var sourceId = options.sourceId;
+        var rootPath = options.rootPath;
+        var expandPaths = options.expandPaths;
+        var ontoggle = options.ontoggle;
+        var exposeApi = options.exposeApi;
+
+        var subElements = {};
         var i;
         var e;
         var entryObj;
+        var expandableHeader;
         var header;
         var headerHead;
         var value;
@@ -4170,7 +4222,7 @@ RED.utils = (function() {
                     $('<span class="debug-message-type-meta debug-message-object-type-header"></span>').html(typeHint||'string').appendTo(header);
                     var row = $('<div class="debug-message-object-entry collapsed"></div>').appendTo(element);
                     $('<pre class="debug-message-type-string"></pre>').text(obj).appendTo(row);
-                },checkExpanded(strippedKey,expandPaths));
+                },function(state) {if (ontoggle) { ontoggle(path,state);}}, checkExpanded(strippedKey,expandPaths));
             }
             e = $('<span class="debug-message-type-string debug-message-object-header"></span>').html('"'+formatString(sanitize(obj))+'"').appendTo(entryObj);
             if (/^#[0-9a-f]{6}$/i.test(obj)) {
@@ -4269,7 +4321,20 @@ RED.utils = (function() {
                     if (fullLength <= 10) {
                         for (i=0;i<fullLength;i++) {
                             row = $('<div class="debug-message-object-entry collapsed"></div>').appendTo(arrayRows);
-                            buildMessageElement(data[i],""+i,type==='buffer'?'hex':false,false,path+"["+i+"]",sourceId,rootPath,expandPaths).appendTo(row);
+                            subElements[path+"["+i+"]"] = buildMessageElement(
+                                data[i],
+                                {
+                                    key: ""+i,
+                                    typeHint: type==='buffer'?'hex':false,
+                                    hideKey: false,
+                                    path: path+"["+i+"]",
+                                    sourceId: sourceId,
+                                    rootPath: rootPath,
+                                    expandPaths: expandPaths,
+                                    ontoggle: ontoggle,
+                                    exposeApi: exposeApi
+                                }
+                            ).appendTo(row);
                         }
                     } else {
                         for (i=0;i<fullLength;i+=10) {
@@ -4284,17 +4349,35 @@ RED.utils = (function() {
                                 return function() {
                                     for (var i=min;i<=max;i++) {
                                         var row = $('<div class="debug-message-object-entry collapsed"></div>').appendTo(parent);
-                                        buildMessageElement(data[i],""+i,type==='buffer'?'hex':false,false,path+"["+i+"]",sourceId,rootPath,expandPaths).appendTo(row);
+                                        subElements[path+"["+i+"]"] = buildMessageElement(
+                                            data[i],
+                                            {
+                                                key: ""+i,
+                                                typeHint: type==='buffer'?'hex':false,
+                                                hideKey: false,
+                                                path: path+"["+i+"]",
+                                                sourceId: sourceId,
+                                                rootPath: rootPath,
+                                                expandPaths: expandPaths,
+                                                ontoggle: ontoggle,
+                                                exposeApi: exposeApi
+
+                                            }
+                                        ).appendTo(row);
                                     }
                                 }
-                            })(),checkExpanded(strippedKey,expandPaths,minRange,Math.min(fullLength-1,(minRange+9))));
+                            })(),
+                            (function() { var path = path+"["+i+"]"; return function(state) {if (ontoggle) { ontoggle(path,state);}}})(),
+                            checkExpanded(strippedKey,expandPaths,minRange,Math.min(fullLength-1,(minRange+9))));
                             $('<span class="debug-message-object-key"></span>').html("["+minRange+" &hellip; "+Math.min(fullLength-1,(minRange+9))+"]").appendTo(header);
                         }
                         if (fullLength < originalLength) {
                              $('<div class="debug-message-object-entry collapsed"><span class="debug-message-object-key">['+fullLength+' &hellip; '+originalLength+']</span></div>').appendTo(arrayRows);
                         }
                     }
-                },checkExpanded(strippedKey,expandPaths));
+                },
+                function(state) {if (ontoggle) { ontoggle(path,state);}},
+                checkExpanded(strippedKey,expandPaths));
             }
         } else if (typeof obj === 'object') {
             element.addClass('collapsed');
@@ -4308,17 +4391,35 @@ RED.utils = (function() {
                     for (i=0;i<keys.length;i++) {
                         var row = $('<div class="debug-message-object-entry collapsed"></div>').appendTo(element);
                         var newPath = path;
-                        if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(keys[i])) {
-                            newPath += (newPath.length > 0?".":"")+keys[i];
-                        } else {
-                            newPath += "[\""+keys[i].replace(/"/,"\\\"")+"\"]"
+                        if (newPath) {
+                            if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(keys[i])) {
+                                newPath += (newPath.length > 0?".":"")+keys[i];
+                            } else {
+                                newPath += "[\""+keys[i].replace(/"/,"\\\"")+"\"]"
+                            }
                         }
-                        buildMessageElement(obj[keys[i]],keys[i],false,false,newPath,sourceId,rootPath,expandPaths).appendTo(row);
+                        subElements[newPath] = buildMessageElement(
+                            obj[keys[i]],
+                            {
+                                key: keys[i],
+                                typeHint: false,
+                                hideKey: false,
+                                path: newPath,
+                                sourceId: sourceId,
+                                rootPath: rootPath,
+                                expandPaths: expandPaths,
+                                ontoggle: ontoggle,
+                                exposeApi: exposeApi
+
+                            }
+                        ).appendTo(row);
                     }
                     if (keys.length === 0) {
                         $('<div class="debug-message-object-entry debug-message-type-meta collapsed"></div>').text("empty").appendTo(element);
                     }
-                },checkExpanded(strippedKey,expandPaths));
+                },
+                function(state) {if (ontoggle) { ontoggle(path,state);}},
+                checkExpanded(strippedKey,expandPaths));
             }
             if (key) {
                 $('<span class="debug-message-type-meta"></span>').html('object').appendTo(entryObj);
@@ -4344,6 +4445,28 @@ RED.utils = (function() {
             }
         } else {
             $('<span class="debug-message-type-other"></span>').text(""+obj).appendTo(entryObj);
+        }
+        if (exposeApi) {
+            element.prop('expand', function() { return function(targetPath, state) {
+                if (path === targetPath) {
+                    if (header.prop('toggle')) {
+                        header.prop('toggle')(state);
+                    }
+                } else if (subElements[targetPath] && subElements[targetPath].prop('expand') ) {
+                    subElements[targetPath].prop('expand')(targetPath,state);
+                } else {
+                    for (var p in subElements) {
+                        if (subElements.hasOwnProperty(p)) {
+                            if (targetPath.indexOf(p) === 0) {
+                                if (subElements[p].prop('expand') ) {
+                                    subElements[p].prop('expand')(targetPath,state);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }});
         }
         return element;
     }
@@ -4491,6 +4614,8 @@ RED.utils = (function() {
             return "icons/node-red/subflow.png"
         } else if (node && node.type === 'unknown') {
             return "icons/node-red/alert.png"
+        } else if (node && node.type === 'subflow') {
+            return "icons/node-red/subflow.png"
         }
         var icon_url;
         if (typeof def.icon === "function") {
@@ -4619,7 +4744,7 @@ RED.utils = (function() {
             if (this.element.css("position") === "absolute") {
                 ["top","left","bottom","right"].forEach(function(s) {
                     var v = that.element.css(s);
-                    if (s!=="auto" && s!=="") {
+                    if (v!=="auto" && v!=="") {
                         that.topContainer.css(s,v);
                         that.uiContainer.css(s,"0");
                         that.element.css(s,'auto');
@@ -6736,8 +6861,8 @@ RED.deploy = (function() {
                 create: function() {
                     $("#node-dialog-confirm-deploy").parent().find("div.ui-dialog-buttonpane")
                         .prepend('<div style="height:0; vertical-align: middle; display:inline-block; margin-top: 13px; float:left;">'+
-                                   '<input style="vertical-align:top;" type="checkbox" id="node-dialog-confirm-deploy-hide">'+
-                                   '<label style="display:inline;" for="node-dialog-confirm-deploy-hide"> do not warn about this again</label>'+
+                                   '<input style="vertical-align:top;" type="checkbox" id="node-dialog-confirm-deploy-hide"> '+
+                                   '<label style="display:inline;" for="node-dialog-confirm-deploy-hide" data-i18n="deploy.confirm.doNotWarn"></label>'+
                                    '<input type="hidden" id="node-dialog-confirm-deploy-type">'+
                                    '</div>');
                 },
@@ -7022,52 +7147,26 @@ RED.deploy = (function() {
 ;RED.diff = (function() {
 
     var currentDiff = {};
+    var diffVisible = false;
+    var diffList;
 
     function init() {
 
         // RED.actions.add("core:show-current-diff",showLocalDiff);
         RED.actions.add("core:show-remote-diff",showRemoteDiff);
-
         // RED.keyboard.add("*","ctrl-shift-l","core:show-current-diff");
         RED.keyboard.add("*","ctrl-shift-r","core:show-remote-diff");
 
+    }
 
-        var dialog = $('<div id="node-dialog-view-diff" class="hide"><div id="node-dialog-view-diff-headers"></div><ol id="node-dialog-view-diff-diff"></ol></div>').appendTo(document.body);
+    function buildDiffPanel(container) {
+        var diffPanel = $('<div id="node-dialog-view-diff"><div id="node-dialog-view-diff-headers"></div><ol id="node-dialog-view-diff-diff"></ol></div>').appendTo(container);
 
         var toolbar = $('<div class="node-diff-toolbar">'+
             '<span><span id="node-diff-toolbar-resolved-conflicts"></span></span> '+
-            '</div>').prependTo(dialog);
+            '</div>').prependTo(diffPanel);
 
-        $("#node-dialog-view-diff").dialog({
-            title: RED._('deploy.confirm.button.review'),
-            modal: true,
-            autoOpen: false,
-            buttons: [
-                {
-                    text: RED._("common.label.cancel"),
-                    click: function() {
-                        $( this ).dialog( "close" );
-                    }
-                },
-                {
-                    id: "node-diff-view-diff-merge",
-                    text: RED._("deploy.confirm.button.merge"),
-                    class: "primary disabled",
-                    click: function() {
-                        if (!$("#node-diff-view-diff-merge").hasClass('disabled')) {
-                            refreshConflictHeader();
-                            mergeDiff(currentDiff);
-                            $( this ).dialog( "close" );
-                        }
-                    }
-                }
-            ],
-            open: function() {
-                $(this).dialog({width:Math.min($(window).width(),900),height:Math.min($(window).height(),600)});
-            }
-        });
-
-        var diffList = $("#node-dialog-view-diff-diff").editableList({
+        diffList = diffPanel.find("#node-dialog-view-diff-diff").editableList({
             addButton: false,
             scrollOnAdd: false,
             addItem: function(container,i,object) {
@@ -7098,7 +7197,7 @@ RED.deploy = (function() {
                 } else if (tab.type === 'subflow') {
                     titleSpan.html((tabForLabel.name||tabForLabel.id));
                 } else {
-                    titleSpan.html("Global nodes");
+                    titleSpan.html(RED._("diff.globalNodes"));
                 }
                 var flowStats = {
                     local: {
@@ -7174,7 +7273,7 @@ RED.deploy = (function() {
                             }
                         }
                         $('<span class="node-diff-chevron"><i class="fa fa-angle-down"></i></span>').appendTo(originalNodeDiv);
-                        $('<span>').html("Flow Properties").appendTo(originalNodeDiv);
+                        $('<span>').html(RED._("diff.flowProperties")).appendTo(originalNodeDiv);
 
                         row.click(function(evt) {
                             evt.preventDefault();
@@ -7328,6 +7427,7 @@ RED.deploy = (function() {
                 container.i18n();
             }
         });
+        return diffPanel;
     }
     function formatWireProperty(wires,allNodes) {
         var result = $("<div>",{class:"node-diff-property-wires"})
@@ -7584,6 +7684,7 @@ RED.deploy = (function() {
         return div;
     }
     function createNodePropertiesTable(def,node,localNodeObj,remoteNodeObj) {
+        var propertyElements = {};
         var localNode = localNodeObj.node;
         var remoteNode;
         if (remoteNodeObj) {
@@ -7592,8 +7693,15 @@ RED.deploy = (function() {
 
         var nodePropertiesDiv = $("<div>",{class:"node-diff-node-entry-properties"});
         var nodePropertiesTable = $("<table>").appendTo(nodePropertiesDiv);
+        var nodePropertiesTableCols = $('<colgroup><col/><col/></colgroup>').appendTo(nodePropertiesTable);
+        if (remoteNode !== undefined) {
+            $("<col/>").appendTo(nodePropertiesTableCols);
+        }
+        var nodePropertiesTableBody = $("<tbody>").appendTo(nodePropertiesTable);
+
         var row;
         var localCell, remoteCell;
+        var element;
         var currentValue, localValue, remoteValue;
         var localChanged = false;
         var remoteChanged = false;
@@ -7602,13 +7710,14 @@ RED.deploy = (function() {
         var conflict = false;
         var status;
 
-        row = $("<tr>").appendTo(nodePropertiesTable);
+        row = $("<tr>").appendTo(nodePropertiesTableBody);
         $("<td>",{class:"node-diff-property-cell-label"}).html("id").appendTo(row);
         localCell = $("<td>",{class:"node-diff-property-cell node-diff-node-local"}).appendTo(row);
         if (localNode) {
             localCell.addClass("node-diff-node-unchanged");
             $('<span class="node-diff-status"></span>').appendTo(localCell);
-            RED.utils.createObjectElement(localNode.id).appendTo(localCell);
+            element = $('<span class="node-diff-element"></span>').appendTo(localCell);
+            propertyElements['local.id'] = RED.utils.createObjectElement(localNode.id).appendTo(element);
         } else {
             localCell.addClass("node-diff-empty");
         }
@@ -7617,7 +7726,8 @@ RED.deploy = (function() {
             remoteCell.addClass("node-diff-node-unchanged");
             if (remoteNode) {
                 $('<span class="node-diff-status"></span>').appendTo(remoteCell);
-                RED.utils.createObjectElement(remoteNode.id).appendTo(remoteCell);
+                element = $('<span class="node-diff-element"></span>').appendTo(remoteCell);
+                propertyElements['remote.id'] = RED.utils.createObjectElement(remoteNode.id).appendTo(element);
             } else {
                 remoteCell.addClass("node-diff-empty");
             }
@@ -7643,13 +7753,24 @@ RED.deploy = (function() {
             ) {
                 conflict = true;
             }
-            row = $("<tr>").appendTo(nodePropertiesTable);
+            row = $("<tr>").appendTo(nodePropertiesTableBody);
             $("<td>",{class:"node-diff-property-cell-label"}).html("position").appendTo(row);
             localCell = $("<td>",{class:"node-diff-property-cell node-diff-node-local"}).appendTo(row);
             if (localNode) {
                 localCell.addClass("node-diff-node-"+(localChanged?"changed":"unchanged"));
                 $('<span class="node-diff-status">'+(localChanged?'<i class="fa fa-square"></i>':'')+'</span>').appendTo(localCell);
-                RED.utils.createObjectElement({x:localNode.x,y:localNode.y}).appendTo(localCell);
+                element = $('<span class="node-diff-element"></span>').appendTo(localCell);
+                propertyElements['local.position'] = RED.utils.createObjectElement({x:localNode.x,y:localNode.y},
+                    {
+                        path: "position",
+                        exposeApi: true,
+                        ontoggle: function(path,state) {
+                            if (propertyElements['remote.'+path]) {
+                                propertyElements['remote.'+path].prop('expand')(path,state)
+                            }
+                        }
+                    }
+                ).appendTo(element);
             } else {
                 localCell.addClass("node-diff-empty");
             }
@@ -7659,7 +7780,18 @@ RED.deploy = (function() {
                 remoteCell.addClass("node-diff-node-"+(remoteChanged?"changed":"unchanged"));
                 if (remoteNode) {
                     $('<span class="node-diff-status">'+(remoteChanged?'<i class="fa fa-square"></i>':'')+'</span>').appendTo(remoteCell);
-                    RED.utils.createObjectElement({x:remoteNode.x,y:remoteNode.y}).appendTo(remoteCell);
+                    element = $('<span class="node-diff-element"></span>').appendTo(remoteCell);
+                    propertyElements['remote.position'] = RED.utils.createObjectElement({x:remoteNode.x,y:remoteNode.y},
+                        {
+                            path: "position",
+                            exposeApi: true,
+                            ontoggle: function(path,state) {
+                                if (propertyElements['local.'+path]) {
+                                    propertyElements['local.'+path].prop('expand')(path,state);
+                                }
+                            }
+                        }
+                    ).appendTo(element);
                 } else {
                     remoteCell.addClass("node-diff-empty");
                 }
@@ -7689,7 +7821,7 @@ RED.deploy = (function() {
             ){
                 conflict = true;
             }
-            row = $("<tr>").appendTo(nodePropertiesTable);
+            row = $("<tr>").appendTo(nodePropertiesTableBody);
             $("<td>",{class:"node-diff-property-cell-label"}).html("wires").appendTo(row);
             localCell = $("<td>",{class:"node-diff-property-cell node-diff-node-local"}).appendTo(row);
             if (localNode) {
@@ -7721,9 +7853,13 @@ RED.deploy = (function() {
                 }
             }
         }
-        var properties = Object.keys(node).filter(function(p) { return p!='z'&&p!='wires'&&p!=='x'&&p!=='y'&&p!=='id'&&p!=='type'&&(!def.defaults||!def.defaults.hasOwnProperty(p))});
+
+        var properties = Object.keys(node).filter(function(p) { return p!='inputLabels'&&p!='outputLabels'&&p!='z'&&p!='wires'&&p!=='x'&&p!=='y'&&p!=='id'&&p!=='type'&&(!def.defaults||!def.defaults.hasOwnProperty(p))});
         if (def.defaults) {
             properties = properties.concat(Object.keys(def.defaults));
+        }
+        if (node.type !== 'tab') {
+            properties = properties.concat(['inputLabels','outputLabels']);
         }
         properties.forEach(function(d) {
             localChanged = false;
@@ -7752,8 +7888,8 @@ RED.deploy = (function() {
                 conflict = true;
             }
 
-            row = $("<tr>").appendTo(nodePropertiesTable);
-            $("<td>",{class:"node-diff-property-cell-label"}).html(d).appendTo(row);
+            row = $("<tr>").appendTo(nodePropertiesTableBody);
+            var propertyNameCell = $("<td>",{class:"node-diff-property-cell-label"}).html(d).appendTo(row);
             localCell = $("<td>",{class:"node-diff-property-cell node-diff-node-local"}).appendTo(row);
             if (localNode) {
                 if (!conflict) {
@@ -7763,7 +7899,18 @@ RED.deploy = (function() {
                     localCell.addClass("node-diff-node-conflict");
                     $('<span class="node-diff-status"><i class="fa fa-exclamation"></i></span>').appendTo(localCell);
                 }
-                RED.utils.createObjectElement(localNode[d]).appendTo(localCell);
+                element = $('<span class="node-diff-element"></span>').appendTo(localCell);
+                propertyElements['local.'+d] = RED.utils.createObjectElement(localNode[d],
+                    {
+                        path: d,
+                        exposeApi: true,
+                        ontoggle: function(path,state) {
+                            if (propertyElements['remote.'+d]) {
+                                propertyElements['remote.'+d].prop('expand')(path,state)
+                            }
+                        }
+                    }
+                ).appendTo(element);
             } else {
                 localCell.addClass("node-diff-empty");
             }
@@ -7777,7 +7924,18 @@ RED.deploy = (function() {
                         remoteCell.addClass("node-diff-node-conflict");
                         $('<span class="node-diff-status"><i class="fa fa-exclamation"></i></span>').appendTo(remoteCell);
                     }
-                    RED.utils.createObjectElement(remoteNode[d]).appendTo(remoteCell);
+                    element = $('<span class="node-diff-element"></span>').appendTo(remoteCell);
+                    propertyElements['remote.'+d] = RED.utils.createObjectElement(remoteNode[d],
+                        {
+                            path: d,
+                            exposeApi: true,
+                            ontoggle: function(path,state) {
+                                if (propertyElements['local.'+d]) {
+                                    propertyElements['local.'+d].prop('expand')(path,state)
+                                }
+                            }
+                        }
+                    ).appendTo(element);
                 } else {
                     remoteCell.addClass("node-diff-empty");
                 }
@@ -8023,186 +8181,225 @@ RED.deploy = (function() {
         // console.log(conflicted);
         return diff;
     }
+
     function showDiff(diff) {
+        if (diffVisible) {
+            return;
+        }
+
         var localDiff = diff.localDiff;
         var remoteDiff = diff.remoteDiff;
         var conflicts = diff.conflicts;
         currentDiff = diff;
-        var list = $("#node-dialog-view-diff-diff");
-        list.editableList('empty');
 
-        if (remoteDiff) {
-            $("#node-diff-view-diff-merge").show();
-            if (Object.keys(conflicts).length === 0) {
-                $("#node-diff-view-diff-merge").removeClass('disabled');
-            } else {
-                $("#node-diff-view-diff-merge").addClass('disabled');
-            }
-        } else {
-            $("#node-diff-view-diff-merge").hide();
-        }
-        refreshConflictHeader();
-
-        $("#node-dialog-view-diff-headers").empty();
-        // console.log("--------------");
-        // console.log(localDiff);
-        // console.log(remoteDiff);
-        var currentConfig = localDiff.currentConfig;
-        var newConfig = localDiff.newConfig;
-        conflicts = conflicts || {};
-
-        var el = {
-            diff: localDiff,
-            def: {
-                category: 'config',
-                color: '#f0f0f0'
+        var trayOptions = {
+            title: "Review Changes", //TODO: nls
+            width: Infinity,
+            buttons: [
+                {
+                    text: RED._("common.label.cancel"),
+                    click: function() {
+                        RED.tray.close();
+                    }
+                },
+                {
+                    id: "node-diff-view-diff-merge",
+                    text: RED._("deploy.confirm.button.merge"),
+                    class: "primary disabled",
+                    click: function() {
+                        if (!$("#node-diff-view-diff-merge").hasClass('disabled')) {
+                            refreshConflictHeader();
+                            mergeDiff(currentDiff);
+                            RED.tray.close();
+                        }
+                    }
+                }
+            ],
+            resize: function(dimensions) {
+                // trayWidth = dimensions.width;
             },
-            tab: {
-                n: {},
-                nodes: currentConfig.globals
-            },
-            newTab: {
-                n: {},
-                nodes: newConfig.globals
-            }
-        };
+            open: function(tray) {
+                var trayBody = tray.find('.editor-tray-body');
+                var diffPanel = buildDiffPanel(trayBody);
+                if (remoteDiff) {
+                    $("#node-diff-view-diff-merge").show();
+                    if (Object.keys(conflicts).length === 0) {
+                        $("#node-diff-view-diff-merge").removeClass('disabled');
+                    } else {
+                        $("#node-diff-view-diff-merge").addClass('disabled');
+                    }
+                } else {
+                    $("#node-diff-view-diff-merge").hide();
+                }
+                refreshConflictHeader();
 
-        if (remoteDiff !== undefined) {
-            $('#node-dialog-view-diff').addClass('node-diff-three-way');
+                $("#node-dialog-view-diff-headers").empty();
+                // console.log("--------------");
+                // console.log(localDiff);
+                // console.log(remoteDiff);
+                var currentConfig = localDiff.currentConfig;
+                var newConfig = localDiff.newConfig;
+                conflicts = conflicts || {};
 
-            $('<div class="node-diff-node-entry-cell"></div><div class="node-diff-node-entry-cell" data-i18n="diff.local"></div><div class="node-diff-node-entry-cell" data-i18n="diff.remote"></div>').i18n().appendTo("#node-dialog-view-diff-headers");
-            el.remoteTab = {
-                n:{},
-                nodes:remoteDiff.newConfig.globals
-            };
-            el.remoteDiff = remoteDiff;
-        } else {
-            $('#node-dialog-view-diff').removeClass('node-diff-three-way');
-        }
-
-        list.editableList('addItem',el);
-
-        var seenTabs = {};
-
-        currentConfig.tabOrder.forEach(function(tabId) {
-            var tab = currentConfig.tabs[tabId];
-            var el = {
-                diff: localDiff,
-                def: {},
-                tab:tab
-            };
-            if (newConfig.tabs.hasOwnProperty(tabId)) {
-                el.newTab = newConfig.tabs[tabId];
-            }
-            if (remoteDiff !== undefined) {
-                el.remoteTab = remoteDiff.newConfig.tabs[tabId];
-                el.remoteDiff = remoteDiff;
-            }
-            seenTabs[tabId] = true;
-            list.editableList('addItem',el)
-        });
-        newConfig.tabOrder.forEach(function(tabId) {
-            if (!seenTabs[tabId]) {
-                seenTabs[tabId] = true;
-                var tab = newConfig.tabs[tabId];
                 var el = {
                     diff: localDiff,
-                    def: {},
-                    tab:tab,
-                    newTab: tab
+                    def: {
+                        category: 'config',
+                        color: '#f0f0f0'
+                    },
+                    tab: {
+                        n: {},
+                        nodes: currentConfig.globals
+                    },
+                    newTab: {
+                        n: {},
+                        nodes: newConfig.globals
+                    }
                 };
+
                 if (remoteDiff !== undefined) {
+                    diffPanel.addClass('node-diff-three-way');
+
+                    $('<div data-i18n="diff.local"></div><div data-i18n="diff.remote"></div>').i18n().appendTo("#node-dialog-view-diff-headers");
+                    el.remoteTab = {
+                        n:{},
+                        nodes:remoteDiff.newConfig.globals
+                    };
                     el.remoteDiff = remoteDiff;
+                } else {
+                    diffPanel.removeClass('node-diff-three-way');
                 }
-                list.editableList('addItem',el)
-            }
-        });
-        if (remoteDiff !== undefined) {
-            remoteDiff.newConfig.tabOrder.forEach(function(tabId) {
-                if (!seenTabs[tabId]) {
-                    var tab = remoteDiff.newConfig.tabs[tabId];
-                    // TODO how to recognise this is a remotely added flow
+
+                diffList.editableList('addItem',el);
+
+                var seenTabs = {};
+
+                currentConfig.tabOrder.forEach(function(tabId) {
+                    var tab = currentConfig.tabs[tabId];
                     var el = {
                         diff: localDiff,
-                        remoteDiff: remoteDiff,
-                        def: {},
-                        tab:tab,
-                        remoteTab:tab
+                        def: RED.nodes.getType('tab'),
+                        tab:tab
                     };
-                    list.editableList('addItem',el)
-                }
-            });
-        }
-        var subflowId;
-        for (subflowId in currentConfig.subflows) {
-            if (currentConfig.subflows.hasOwnProperty(subflowId)) {
-                seenTabs[subflowId] = true;
-                el = {
-                    diff: localDiff,
-                    def: {
-                        defaults:{},
-                        icon:"subflow.png",
-                        category: "subflows",
-                        color: "#da9"
-                    },
-                    tab:currentConfig.subflows[subflowId]
-                }
-                if (newConfig.subflows.hasOwnProperty(subflowId)) {
-                    el.newTab = newConfig.subflows[subflowId];
-                }
-                if (remoteDiff !== undefined) {
-                    el.remoteTab = remoteDiff.newConfig.subflows[subflowId];
-                    el.remoteDiff = remoteDiff;
-                }
-                list.editableList('addItem',el)
-            }
-        }
-        for (subflowId in newConfig.subflows) {
-            if (newConfig.subflows.hasOwnProperty(subflowId) && !seenTabs[subflowId]) {
-                seenTabs[subflowId] = true;
-                el = {
-                    diff: localDiff,
-                    def: {
-                        defaults:{},
-                        icon:"subflow.png",
-                        category: "subflows",
-                        color: "#da9"
-                    },
-                    tab:newConfig.subflows[subflowId],
-                    newTab:newConfig.subflows[subflowId]
-                }
-                if (remoteDiff !== undefined) {
-                    el.remoteDiff = remoteDiff;
-                }
-                list.editableList('addItem',el)
-            }
-        }
-        if (remoteDiff !== undefined) {
-            for (subflowId in remoteDiff.newConfig.subflows) {
-                if (remoteDiff.newConfig.subflows.hasOwnProperty(subflowId) && !seenTabs[subflowId]) {
-                    el = {
-                        diff: localDiff,
-                        remoteDiff: remoteDiff,
-                        def: {
-                            defaults:{},
-                            icon:"subflow.png",
-                            category: "subflows",
-                            color: "#da9"
-                        },
-                        tab:remoteDiff.newConfig.subflows[subflowId],
-                        remoteTab: remoteDiff.newConfig.subflows[subflowId]
+                    if (newConfig.tabs.hasOwnProperty(tabId)) {
+                        el.newTab = newConfig.tabs[tabId];
                     }
-                    list.editableList('addItem',el)
+                    if (remoteDiff !== undefined) {
+                        el.remoteTab = remoteDiff.newConfig.tabs[tabId];
+                        el.remoteDiff = remoteDiff;
+                    }
+                    seenTabs[tabId] = true;
+                    diffList.editableList('addItem',el)
+                });
+                newConfig.tabOrder.forEach(function(tabId) {
+                    if (!seenTabs[tabId]) {
+                        seenTabs[tabId] = true;
+                        var tab = newConfig.tabs[tabId];
+                        var el = {
+                            diff: localDiff,
+                            def: RED.nodes.getType('tab'),
+                            tab:tab,
+                            newTab: tab
+                        };
+                        if (remoteDiff !== undefined) {
+                            el.remoteDiff = remoteDiff;
+                        }
+                        diffList.editableList('addItem',el)
+                    }
+                });
+                if (remoteDiff !== undefined) {
+                    remoteDiff.newConfig.tabOrder.forEach(function(tabId) {
+                        if (!seenTabs[tabId]) {
+                            var tab = remoteDiff.newConfig.tabs[tabId];
+                            // TODO how to recognise this is a remotely added flow
+                            var el = {
+                                diff: localDiff,
+                                remoteDiff: remoteDiff,
+                                def: RED.nodes.getType('tab'),
+                                tab:tab,
+                                remoteTab:tab
+                            };
+                            diffList.editableList('addItem',el)
+                        }
+                    });
                 }
+                var subflowId;
+                for (subflowId in currentConfig.subflows) {
+                    if (currentConfig.subflows.hasOwnProperty(subflowId)) {
+                        seenTabs[subflowId] = true;
+                        el = {
+                            diff: localDiff,
+                            def: {
+                                defaults:{},
+                                icon:"subflow.png",
+                                category: "subflows",
+                                color: "#da9"
+                            },
+                            tab:currentConfig.subflows[subflowId]
+                        }
+                        if (newConfig.subflows.hasOwnProperty(subflowId)) {
+                            el.newTab = newConfig.subflows[subflowId];
+                        }
+                        if (remoteDiff !== undefined) {
+                            el.remoteTab = remoteDiff.newConfig.subflows[subflowId];
+                            el.remoteDiff = remoteDiff;
+                        }
+                        diffList.editableList('addItem',el)
+                    }
+                }
+                for (subflowId in newConfig.subflows) {
+                    if (newConfig.subflows.hasOwnProperty(subflowId) && !seenTabs[subflowId]) {
+                        seenTabs[subflowId] = true;
+                        el = {
+                            diff: localDiff,
+                            def: {
+                                defaults:{},
+                                icon:"subflow.png",
+                                category: "subflows",
+                                color: "#da9"
+                            },
+                            tab:newConfig.subflows[subflowId],
+                            newTab:newConfig.subflows[subflowId]
+                        }
+                        if (remoteDiff !== undefined) {
+                            el.remoteDiff = remoteDiff;
+                        }
+                        diffList.editableList('addItem',el)
+                    }
+                }
+                if (remoteDiff !== undefined) {
+                    for (subflowId in remoteDiff.newConfig.subflows) {
+                        if (remoteDiff.newConfig.subflows.hasOwnProperty(subflowId) && !seenTabs[subflowId]) {
+                            el = {
+                                diff: localDiff,
+                                remoteDiff: remoteDiff,
+                                def: {
+                                    defaults:{},
+                                    icon:"subflow.png",
+                                    category: "subflows",
+                                    color: "#da9"
+                                },
+                                tab:remoteDiff.newConfig.subflows[subflowId],
+                                remoteTab: remoteDiff.newConfig.subflows[subflowId]
+                            }
+                            diffList.editableList('addItem',el)
+                        }
+                    }
+                }
+                $("#sidebar-shade").show();
+            },
+            close: function() {
+                diffVisible = false;
+                $("#sidebar-shade").hide();
+
+            },
+            show: function() {
+
             }
         }
-
-
-        $("#node-diff-filter-changed").addClass("selected");
-        $("#node-diff-filter-all").removeClass("selected");
-
-        $("#node-dialog-view-diff").dialog("open");
+        RED.tray.show(trayOptions);
     }
+
     function mergeDiff(diff) {
         var currentConfig = diff.localDiff.currentConfig;
         var localDiff = diff.localDiff;
@@ -8281,7 +8478,6 @@ RED.deploy = (function() {
         RED.palette.refresh();
         RED.workspaces.refresh();
         RED.sidebar.config.refresh();
-
     }
     return {
         init: init,
@@ -8381,7 +8577,7 @@ RED.keyboard = (function() {
 
         RED.userSettings.add({
             id:'keyboard',
-            title: 'Keyboard',
+            title: RED._("keyboard.keyboard"),
             get: getSettingsPane,
             focus: function() {
                 setTimeout(function() {
@@ -8642,7 +8838,8 @@ RED.keyboard = (function() {
                 $(this).toggleClass("input-error",!valid);
             })
 
-            var scopeSelect = $('<select><option value="*">global</option><option value="workspace">workspace</option></select>').appendTo(scope);
+            var scopeSelect = $('<select><option value="*" data-i18n="keyboard.global"></option><option value="workspace" data-i18n="keyboard.workspace"></option></select>').appendTo(scope);
+            scopeSelect.i18n();
             scopeSelect.val(object.scope||'*');
 
             var div = $('<div class="keyboard-shortcut-edit button-group-vertical"></div>').appendTo(scope);
@@ -8760,9 +8957,9 @@ RED.keyboard = (function() {
         var pane = $('<div id="user-settings-tab-keyboard"></div>');
 
         $('<div class="keyboard-shortcut-entry keyboard-shortcut-list-header">'+
-        '<div class="keyboard-shortcut-entry-key keyboard-shortcut-entry-text"><input id="user-settings-tab-keyboard-filter" type="text" placeholder="filter actions"></div>'+
-        '<div class="keyboard-shortcut-entry-key">shortcut</div>'+
-        '<div class="keyboard-shortcut-entry-scope">scope</div>'+
+        '<div class="keyboard-shortcut-entry-key keyboard-shortcut-entry-text"><input id="user-settings-tab-keyboard-filter" type="text" data-i18n="[placeholder]keyboard.filterActions"></div>'+
+        '<div class="keyboard-shortcut-entry-key" data-i18n="keyboard.shortcut"></div>'+
+        '<div class="keyboard-shortcut-entry-scope" data-i18n="keyboard.scope"></div>'+
         '</div>').appendTo(pane);
 
         pane.find("input").searchBox({
@@ -8851,7 +9048,7 @@ RED.workspaces = (function() {
                 workspaceIndex += 1;
             } while ($("#workspace-tabs a[title='"+RED._('workspace.defaultName',{number:workspaceIndex})+"']").size() !== 0);
 
-            ws = {type:"tab",id:tabId,label:RED._('workspace.defaultName',{number:workspaceIndex})};
+            ws = {type:"tab",id:tabId,disabled: false,info:"",label:RED._('workspace.defaultName',{number:workspaceIndex})};
             RED.nodes.addWorkspace(ws);
             workspace_tabs.addTab(ws);
             workspace_tabs.activateTab(tabId);
@@ -12194,7 +12391,7 @@ RED.palette = (function() {
 
     var categoryContainers = {};
 
-    function createCategoryContainer(category, label){
+    function createCategoryContainer(category, label) {
         label = (label || category).replace(/_/g, " ");
         var catDiv = $('<div id="palette-container-'+category+'" class="palette-category palette-close hide">'+
             '<div id="palette-header-'+category+'" class="palette-header"><i class="expanded fa fa-angle-down"></i><span>'+label+'</span></div>'+
@@ -12498,14 +12695,26 @@ RED.palette = (function() {
             }
         }
     }
+
     function hideNodeType(nt) {
         var nodeTypeId = escapeNodeType(nt);
-        $("#palette_node_"+nodeTypeId).hide();
+        var paletteNode = $("#palette_node_"+nodeTypeId);
+        paletteNode.hide();
+        var categoryNode = paletteNode.closest(".palette-category");
+        var cl = categoryNode.find(".palette_node");
+        var c = 0;
+        for (var i = 0; i < cl.length; i++) {
+            if ($(cl[i]).css('display') === 'none') { c += 1; }
+        }
+        if (c === cl.length) { categoryNode.hide(); }
     }
 
     function showNodeType(nt) {
         var nodeTypeId = escapeNodeType(nt);
-        $("#palette_node_"+nodeTypeId).show();
+        var paletteNode = $("#palette_node_"+nodeTypeId);
+        var categoryNode = paletteNode.closest(".palette-category");
+        categoryNode.show();
+        paletteNode.show();
     }
 
     function refreshNodeTypes() {
@@ -12569,7 +12778,6 @@ RED.palette = (function() {
         RED.events.on('registry:node-type-removed', function(nodeType) {
             removeNodeType(nodeType);
         });
-
         RED.events.on('registry:node-set-enabled', function(nodeSet) {
             for (var j=0;j<nodeSet.types.length;j++) {
                 showNodeType(nodeSet.types[j]);
@@ -12599,7 +12807,6 @@ RED.palette = (function() {
                 }
             }
         });
-
 
         $("#palette > .palette-spinner").show();
 
@@ -12702,11 +12909,11 @@ RED.sidebar.info = (function() {
         }).hide();
 
         nodeSection = sections.add({
-            title: "Node",
+            title: RED._("sidebar.info.node"),
             collapsible: false
         });
         infoSection = sections.add({
-            title: "Information",
+            title: RED._("sidebar.info.information"),
             collapsible: false
         });
         infoSection.content.css("padding","6px");
@@ -12784,15 +12991,15 @@ RED.sidebar.info = (function() {
         var propRow;
         var subflowNode;
         if (node.type === "tab") {
-            nodeSection.title.html("Flow");
-            propRow = $('<tr class="node-info-node-row"><td>Name</td><td></td></tr>').appendTo(tableBody);
+            nodeSection.title.html(RED._("sidebar.info.flow"));
+            propRow = $('<tr class="node-info-node-row"><td>'+RED._("sidebar.info.tabName")+'</td><td></td></tr>').appendTo(tableBody);
             $(propRow.children()[1]).html('&nbsp;'+(node.label||""))
             propRow = $('<tr class="node-info-node-row"><td>'+RED._("sidebar.info.id")+"</td><td></td></tr>").appendTo(tableBody);
             RED.utils.createObjectElement(node.id).appendTo(propRow.children()[1]);
-            propRow = $('<tr class="node-info-node-row"><td>Status</td><td></td></tr>').appendTo(tableBody);
-            $(propRow.children()[1]).html((!!!node.disabled)?"Enabled":"Disabled")
+            propRow = $('<tr class="node-info-node-row"><td>'+RED._("sidebar.info.status")+'</td><td></td></tr>').appendTo(tableBody);
+            $(propRow.children()[1]).html((!!!node.disabled)?RED._("sidebar.info.enabled"):RED._("sidebar.info.disabled"))
         } else {
-            nodeSection.title.html("Node");
+            nodeSection.title.html(RED._("sidebar.info.node"));
             if (node.type !== "subflow" && node.name) {
                 $('<tr class="node-info-node-row"><td>'+RED._("common.label.name")+'</td><td>&nbsp;<span class="bidiAware" dir="'+RED.text.bidi.resolveBaseTextDir(node.name)+'">'+node.name+'</span></td></tr>').appendTo(tableBody);
             }
@@ -12840,7 +13047,7 @@ RED.sidebar.info = (function() {
                         }
                     }
                     if (count > 0) {
-                        $('<tr class="node-info-property-expand blank"><td colspan="2"><a href="#" class=" node-info-property-header'+(expandedSections.property?" expanded":"")+'"><span class="node-info-property-show-more">show more</span><span class="node-info-property-show-less">show less</span> <i class="fa fa-caret-down"></i></a></td></tr>').appendTo(tableBody);
+                        $('<tr class="node-info-property-expand blank"><td colspan="2"><a href="#" class=" node-info-property-header'+(expandedSections.property?" expanded":"")+'"><span class="node-info-property-show-more">'+RED._("sidebar.info.showMore")+'</span><span class="node-info-property-show-less">'+RED._("sidebar.info.showLess")+'</span> <i class="fa fa-caret-down"></i></a></td></tr>').appendTo(tableBody);
                     }
                 }
             }
@@ -13784,7 +13991,7 @@ RED.palette.editor = (function() {
 
         RED.userSettings.add({
             id:'palette',
-            title: 'Palette',
+            title: RED._("palette.editor.palette"),
             get: getSettingsPane,
             close: function() {
                 settingsPane.detach();
@@ -14977,7 +15184,7 @@ RED.editor = (function() {
     function buildLabelRow(type, index, value, placeHolder) {
         var result = $('<div>',{class:"node-label-form-row"});
         if (type === undefined) {
-            $('<span>').html("none").appendTo(result);
+            $('<span>').html(RED._("editor.noDefaultLabel")).appendTo(result);
             result.addClass("node-label-form-none");
         } else {
             result.addClass("");
@@ -16155,12 +16362,12 @@ RED.editor = (function() {
 
                 tabs.addTab({
                     id: 'expression-help',
-                    label: 'Function reference',
+                    label: RED._('expressionEditor.functionReference'),
                     content: $("#node-input-expression-tab-help")
                 });
                 tabs.addTab({
                     id: 'expression-tests',
-                    label: 'Test',
+                    label: RED._('expressionEditor.test'),
                     content: $("#node-input-expression-tab-test")
                 });
                 testDataEditor = RED.editor.createEditor({
@@ -16648,6 +16855,10 @@ RED.tray = (function() {
         if (options.title) {
             $('<div class="editor-tray-titlebar">'+options.title+'</div>').appendTo(header);
         }
+        if (options.width === Infinity) {
+            options.maximized = true;
+            resizer.addClass('editor-tray-resize-maximised');
+        }
         var buttonBar = $('<div class="editor-tray-toolbar"></div>').appendTo(header);
         var primaryButton;
         if (options.buttons) {
@@ -16688,7 +16899,8 @@ RED.tray = (function() {
         };
         stack.push(tray);
 
-        el.draggable({
+        if (!options.maximized) {
+            el.draggable({
                 handle: resizer,
                 axis: "x",
                 start:function(event,ui) {
@@ -16717,6 +16929,7 @@ RED.tray = (function() {
                     tray.width = -ui.position.left;
                 }
             });
+        }
 
         function finishBuild() {
             $("#header-shade").show();
@@ -16789,7 +17002,7 @@ RED.tray = (function() {
             var tray = stack[stack.length-1];
             var trayHeight = tray.tray.height()-tray.header.outerHeight()-tray.footer.outerHeight();
             tray.body.height(trayHeight);
-            if (tray.width > $("#editor-stack").position().left-8) {
+            if (tray.options.maximized || tray.width > $("#editor-stack").position().left-8) {
                 tray.width = $("#editor-stack").position().left-8;
                 tray.tray.width(tray.width);
                 // tray.body.parent().width(tray.width);
@@ -17076,7 +17289,8 @@ RED.clipboard = (function() {
             var nodes = null;
             if (type === 'export-range-selected') {
                 var selection = RED.view.selection();
-                nodes = RED.nodes.createExportableNodeSet(selection.nodes);
+                // Don't include the subflow meta-port nodes in the exported selection
+                nodes = RED.nodes.createExportableNodeSet(selection.nodes.filter(function(n) { return n.type !== 'subflow'}));
             } else if (type === 'export-range-flow') {
                 var activeWorkspace = RED.workspaces.active();
                 nodes = RED.nodes.filterNodes({z:activeWorkspace});
@@ -17957,7 +18171,7 @@ RED.search = (function() {
     function createDialog() {
         dialog = $("<div>",{id:"red-ui-search",class:"red-ui-search"}).appendTo("#main-container");
         var searchDiv = $("<div>",{class:"red-ui-search-container"}).appendTo(dialog);
-        searchInput = $('<input type="text" placeholder="search your flows">').appendTo(searchDiv).searchBox({
+        searchInput = $('<input type="text" data-i18n="[placeholder]menu.label.searchInput">').appendTo(searchDiv).searchBox({
             delay: 200,
             change: function() {
                 search($(this).val());
@@ -17998,6 +18212,7 @@ RED.search = (function() {
                 }
             }
         });
+        searchInput.i18n();
 
         var searchResultsDiv = $("<div>",{class:"red-ui-search-results-container"}).appendTo(dialog);
         searchResults = $('<ol>',{id:"search-result-list", style:"position: absolute;top: 5px;bottom: 5px;left: 5px;right: 5px;"}).appendTo(searchResultsDiv).editableList({
@@ -18353,7 +18568,7 @@ RED.search = (function() {
         var items = [];
         RED.nodes.registry.getNodeTypes().forEach(function(t) {
             var def = RED.nodes.getType(t);
-            if (def.category !== 'config' && t !== 'unknown') {
+            if (def.category !== 'config' && t !== 'unknown' && t !== 'tab') {
                 items.push({type:t,def: def, label:getTypeLabel(t,def)});
             }
         });
@@ -18372,16 +18587,19 @@ RED.search = (function() {
         var commonCount = 0;
         var item;
         for(i=0;i<common.length;i++) {
-            item = {
-                type: common[i],
-                common: true,
-                def: RED.nodes.getType(common[i])
-            };
-            item.label = getTypeLabel(item.type,item.def);
-            if (i === common.length-1) {
-                item.separator = true;
+            var itemDef = RED.nodes.getType(common[i]);
+            if (itemDef) {
+                item = {
+                    type: common[i],
+                    common: true,
+                    def: itemDef
+                };
+                item.label = getTypeLabel(item.type,item.def);
+                if (i === common.length-1) {
+                    item.separator = true;
+                }
+                searchResults.editableList('addItem', item);
             }
-            searchResults.editableList('addItem', item);
         }
         for(i=0;i<Math.min(5,recentlyUsed.length);i++) {
             item = {
@@ -19076,7 +19294,7 @@ RED.userSettings = (function() {
         var tabContainer;
 
         var trayOptions = {
-            title: "User Settings",
+            title: RED._("menu.label.userSettings"),
             buttons: [
                 {
                     id: "node-dialog-ok",
@@ -19143,7 +19361,7 @@ RED.userSettings = (function() {
 
     var viewSettings = [
         {
-            title: "Grid",
+            title: "menu.label.view.grid",
             options: [
                 {setting:"view-show-grid",oldSetting:"menu-menu-item-view-show-grid",label:"menu.label.view.showGrid",toggle:true,onchange:"core:toggle-show-grid"},
                 {setting:"view-snap-grid",oldSetting:"menu-menu-item-view-snap-grid",label:"menu.label.view.snapGrid",toggle:true,onchange:"core:toggle-snap-grid"},
@@ -19151,13 +19369,13 @@ RED.userSettings = (function() {
             ]
         },
         {
-            title: "Nodes",
+            title: "menu.label.nodes",
             options: [
                 {setting:"view-node-status",oldSetting:"menu-menu-item-status",label:"menu.label.displayStatus",default: true, toggle:true,onchange:"core:toggle-status"}
             ]
         },
         {
-            title: "Other",
+            title: "menu.label.other",
             options: [
                 {setting:"view-show-tips",oldSettings:"menu-menu-item-show-tips",label:"menu.label.showTips",toggle:true,default:true,onchange:"core:toggle-show-tips"}
             ]
@@ -19171,7 +19389,7 @@ RED.userSettings = (function() {
         var pane = $('<div id="user-settings-tab-view" class="node-help"></div>');
 
         viewSettings.forEach(function(section) {
-            $('<h3></h3>').text(section.title).appendTo(pane);
+            $('<h3></h3>').text(RED._(section.title)).appendTo(pane);
             section.options.forEach(function(opt) {
                 var initialState = RED.settings.get(opt.setting);
                 var row = $('<div class="user-settings-row"></div>').appendTo(pane);
@@ -19212,7 +19430,7 @@ RED.userSettings = (function() {
 
         addPane({
             id:'view',
-            title: 'View',
+            title: RED._("menu.label.view.view"),
             get: createViewPane,
             close: function() {
                 viewSettings.forEach(function(section) {

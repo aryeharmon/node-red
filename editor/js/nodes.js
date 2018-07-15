@@ -1299,6 +1299,9 @@ RED.nodes = (function() {
                 cb(nodes[n]);
             }
         },
+        getLinks: function() {
+            return links;
+        },
         eachLink: function(cb) {
             for (var l=0;l<links.length;l++) {
                 cb(links[l]);
