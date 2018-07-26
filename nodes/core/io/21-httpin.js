@@ -31,6 +31,7 @@ module.exports = function(RED) {
     var typer = require('media-typer');
     var isUtf8 = require('is-utf8');
     var hashSum = require("hash-sum");
+    var authenticator = require("authenticator");
 
     function rawBodyParser(req, res, next) {
         if (req.skipRawBodyParser) { next(); } // don't parse this if told to skip
@@ -197,6 +198,8 @@ module.exports = function(RED) {
             this.layout = n.layout;
             this.output_settings = n.output_settings;
             this.input_settings = n.input_settings;
+            this.security_enabled = n.security_enabled;
+            this.security_type = n.security_type;
 
             var node = this;
 
@@ -219,7 +222,81 @@ module.exports = function(RED) {
                     node.status({text: 'user not logged in.'})
                     return;
                 }
-                
+
+		if (that.security_enabled && that.security_type) {
+			if (req.user) {
+				RED.settings.functionGlobalContext.app.models.Account.findOne({
+					where: {
+						$or: [
+							{
+								id: req.user ? req.user.id : null,
+							},
+							{
+								email: req.body.email,
+							}
+						],
+					},
+					include: ['AuthenticatorSecurityKey', 'SmsSecurityKey', 'EmailSecurityKey'],
+				}).then(function(account) {
+					if (!account) {
+                                                req.flash('error', 'you must login in order to access this area');
+			                        res.redirect('back');
+						node.status({'text': 'no account found'});
+						return;
+					}
+
+					if (account.google_authenticator.indexOf(that.security_type) > -1 && account.GoogleSecurityKey) {
+						if (!authenticator.verifyToken(account.GoogleSecurityKey.secret, req.body.validation.google_authenticator)) {
+                        	                        req.flash('error', 'invalid google authentication');
+                	                                res.redirect('back');
+        	                                        node.status({'text': 'invalid google authentication'});
+	                                                return;
+						}
+					}
+					if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
+						if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
+                        	                        req.flash('error', 'invalid email authentication');
+                	                                res.redirect('back');
+        	                                        node.status({'text': 'invalid email authentication'});
+	                                                return;
+						}
+					}
+					if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
+						if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
+                        	                        req.flash('error', 'invalid sms authentication');
+                	                                res.redirect('back');
+        	                                        node.status({'text': 'invalid sms authentication'});
+	                                                return;
+						}
+					}
+
+
+					// res.json(account);
+
+                var msgid = RED.util.generateId();
+                res._msgid = msgid;
+                if (node.method.match(/^(post|delete|put|options|patch)$/)) {
+                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
+                } else if (node.method == "get") {
+                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
+                } else {
+                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
+                }
+
+
+					// node.status({'text': 'found account: ' + account.id})
+				})
+
+				// check email validation
+				// check sms validation
+			}
+
+
+			return;
+		}
+
+
+
                 var msgid = RED.util.generateId();
                 res._msgid = msgid;
                 if (node.method.match(/^(post|delete|put|options|patch)$/)) {
@@ -296,13 +373,14 @@ module.exports = function(RED) {
 
         if (n.layout) {
           RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findOne({where: {id: n.layout}}).then(function(layout) {
+		if (!layout) { return; }
             var $ = cheerio.load(layout.html || '<div></div>');
 
             $("form").each(function() {
               $(this).find(':input').each(function(input) {
                 var name = $(this).attr('name');
                 if (name) {
-                  n.output_settings.push(name);
+                  n.output_settings.push(name.replace('[]', ''));
                   console.log(name);
                 }
               })
@@ -313,7 +391,6 @@ module.exports = function(RED) {
 
     }
     RED.nodes.registerType("http in",HTTPIn);
-
 
     function HTTPOut(n) {
         RED.nodes.createNode(this,n);
