@@ -32,6 +32,7 @@ module.exports = function(RED) {
     var isUtf8 = require('is-utf8');
     var hashSum = require("hash-sum");
     var authenticator = require("authenticator");
+    var bcrypt = require('bcrypt');
 
     function rawBodyParser(req, res, next) {
         if (req.skipRawBodyParser) { next(); } // don't parse this if told to skip
@@ -269,7 +270,14 @@ module.exports = function(RED) {
 	                                                return;
 						}
 					}
-
+                                        if (account.password_authenticator.indexOf(that.security_type) > -1) {
+						if (!bcrypt.compareSync(req.body.password, account.password)) {
+                                                        req.flash('error', 'invalid password');
+                                                        res.redirect('back');
+                                                        node.status({'text': 'invalid password authentication'});
+                                                        return;
+						}
+                                        }
 
 					// res.json(account);
 
