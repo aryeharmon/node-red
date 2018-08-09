@@ -223,9 +223,9 @@ module.exports = function(RED) {
                     node.status({text: 'user not logged in.'})
                     return;
                 }
-
+		console.log('1245124124')
 		if (that.security_enabled && that.security_type) {
-			if (req.user) {
+			if (req.user || true) {
 				RED.settings.functionGlobalContext.app.models.Account.findOne({
 					where: {
 						$or: [
@@ -246,8 +246,9 @@ module.exports = function(RED) {
 						return;
 					}
 
-					if (account.google_authenticator.indexOf(that.security_type) > -1 && account.GoogleSecurityKey) {
-						if (!authenticator.verifyToken(account.GoogleSecurityKey.secret, req.body.validation.google_authenticator)) {
+					if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
+						req.body.validation = req.body.validation || {};
+						if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
                         	                        req.flash('error', 'invalid google authentication');
                 	                                res.redirect('back');
         	                                        node.status({'text': 'invalid google authentication'});
@@ -255,6 +256,7 @@ module.exports = function(RED) {
 						}
 					}
 					if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
+						req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
 						if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
                         	                        req.flash('error', 'invalid email authentication');
                 	                                res.redirect('back');
@@ -263,6 +265,7 @@ module.exports = function(RED) {
 						}
 					}
 					if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
+						req.body.validation = req.body.validation || {};
 						if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
                         	                        req.flash('error', 'invalid sms authentication');
                 	                                res.redirect('back');
@@ -384,15 +387,16 @@ module.exports = function(RED) {
 		if (!layout) { return; }
             var $ = cheerio.load(layout.html || '<div></div>');
 
-            $("form").each(function() {
-              $(this).find(':input').each(function(input) {
+            //$("form").each(function() {
+              //$(this).find(':input').each(function(input) {
+              $(':input').each(function(input) {
                 var name = $(this).attr('name');
                 if (name) {
                   n.output_settings.push(name.replace('[]', ''));
                   console.log(name);
                 }
               })
-            });
+            //});
 
           });
         }
