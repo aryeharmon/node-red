@@ -194,6 +194,7 @@ module.exports = function(RED) {
             this.method = n.method;
             this.upload = n.upload;
             this.must_log_in = n.must_log_in;
+            this.must_be_active_account = n.must_be_active_account;
             this.verify_captcha = n.verify_captcha;
             this.swaggerDoc = n.swaggerDoc;
             this.layout = n.layout;
@@ -217,13 +218,19 @@ module.exports = function(RED) {
 			node.status({text: 'invalid captcha.'})
 			return;
 		}
-                if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
-                    req.flash('error', 'you must login in order to access this area');
-                    res.redirect('login');
-                    node.status({text: 'user not logged in.'})
-                    return;
-                }
-		console.log('1245124124')
+        if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
+            req.flash('error', 'you must login in order to access this area');
+            res.redirect('login');
+            node.status({text: 'user not logged in.'})
+            return;
+        }
+        if (that.must_be_active_account && (!req.user || req.user.type !== 'Account' || !req.user.active)) {
+            req.flash('error', 'you must activate your account to access this area.');
+            res.redirect('login');
+            node.status({text: 'user not active.'})
+            return;
+        }
+
 		if (that.security_enabled && that.security_type) {
 			if (req.user || true) {
 				RED.settings.functionGlobalContext.app.models.Account.findOne({
