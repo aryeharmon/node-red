@@ -134,6 +134,7 @@ var result =  {
     createNode: createNode,
     getNode: flows.get,
     eachNode: flows.eachNode,
+    allNodes: flows.allNodes,
 
     paletteEditorEnabled: registry.paletteEditorEnabled,
     installModule: registry.installModule,
