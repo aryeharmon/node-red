@@ -174,6 +174,9 @@ function eachNode(cb) {
         }
     }
 }
+function allNodes(cb) {
+    return activeFlowConfig.allNodes;
+}
 
 function getFlows() {
     return activeConfig;
@@ -638,6 +641,7 @@ var result =  {
 
     get:getNode,
     eachNode: eachNode,
+    allNodes: allNodes,
 
     /**
      * Gets the current flow configuration
