@@ -247,59 +247,74 @@ module.exports = function(RED) {
 					include: ['AuthenticatorSecurityKey', 'SmsSecurityKey', 'EmailSecurityKey'],
 				}).then(function(account) {
 					if (!account) {
-                                                req.flash('error', 'you must login in order to access this area');
-			                        res.redirect('back');
-						node.status({'text': 'no account found'});
+                        req.flash('error', 'you must login in order to access this area');
+                        res.redirect('back');
+                        node.status({'text': 'no account found'});
 						return;
 					}
 
-					if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
-						req.body.validation = req.body.validation || {};
-						if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
-                        	                        req.flash('error', 'invalid google authentication');
-                	                                res.redirect('back');
-        	                                        node.status({'text': 'invalid google authentication'});
-	                                                return;
-						}
-					}
-					if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
-						req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
-						if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
-                        	                        req.flash('error', 'invalid email authentication');
-                	                                res.redirect('back');
-        	                                        node.status({'text': 'invalid email authentication'});
-	                                                return;
-						}
-					}
-					if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
-						req.body.validation = req.body.validation || {};
-						if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
-                        	                        req.flash('error', 'invalid sms authentication');
-                	                                res.redirect('back');
-        	                                        node.status({'text': 'invalid sms authentication'});
-	                                                return;
-						}
-					}
-                                        if (account.password_authenticator.indexOf(that.security_type) > -1) {
-						if (!bcrypt.compareSync(req.body.password, account.password)) {
-                                                        req.flash('error', 'invalid password');
-                                                        res.redirect('back');
-                                                        node.status({'text': 'invalid password authentication'});
-                                                        return;
-						}
-                                        }
+                    // if has master account and no permissions
+                    account.role = account.role || [];
+                    if (account.master_account_id && account.role.indexOf(that.security_type) > -1 ) {
+                        req.flash('error', 'You do not have permissions to perform this action');
+                        res.redirect('back');
+                        node.status({'text': 'You do not have permissions to perform this action (slave account)'});
+                        return;
+                    }
+
+					account.google_authenticator = account.google_authenticator || [];
+                    account.sms_authenticator = account.sms_authenticator || [];
+                    account.email_authenticator = account.email_authenticator || [];
+                    account.password_authenticator = account.password_authenticator || [];
+
+
+                    if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
+                        req.body.validation = req.body.validation || {};
+                        if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
+                            req.flash('error', 'invalid google authentication');
+                            res.redirect('back');
+                            node.status({'text': 'invalid google authentication'});
+                            return;
+                        }
+                    }
+                    if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
+                        req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
+                        if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
+                            req.flash('error', 'invalid email authentication');
+                            res.redirect('back');
+                            node.status({'text': 'invalid email authentication'});
+                            return;
+                        }
+                    }
+                    if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
+                        req.body.validation = req.body.validation || {};
+                        if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
+                            req.flash('error', 'invalid sms authentication');
+                            res.redirect('back');
+                            node.status({'text': 'invalid sms authentication'});
+                            return;
+                        }
+                    }
+                    if (account.password_authenticator.indexOf(that.security_type) > -1) {
+                        if (!bcrypt.compareSync(req.body.password, account.password)) {
+                            req.flash('error', 'invalid password');
+                            res.redirect('back');
+                            node.status({'text': 'invalid password authentication'});
+                            return;
+                        }
+                    }
 
 					// res.json(account);
 
-                var msgid = RED.util.generateId();
-                res._msgid = msgid;
-                if (node.method.match(/^(post|delete|put|options|patch)$/)) {
-                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
-                } else if (node.method == "get") {
-                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
-                } else {
-                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
-                }
+                    var msgid = RED.util.generateId();
+                    res._msgid = msgid;
+                    if (node.method.match(/^(post|delete|put|options|patch)$/)) {
+                        node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
+                    } else if (node.method == "get") {
+                        node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
+                    } else {
+                        node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
+                    }
 
 
 					// node.status({'text': 'found account: ' + account.id})

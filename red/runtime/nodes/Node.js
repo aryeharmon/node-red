@@ -179,7 +179,7 @@ Node.prototype.send = function(msg) {
                                     sentMessageId = m._msgid;
                                 }
                                 if (msgSent) {
-                                    var clonedmsg = redUtil.cloneMessage(m);
+                                    var clonedmsg = m.hook ? m : redUtil.cloneMessage(m);
                                     sendEvents.push({n:node,m:clonedmsg});
                                 } else {
                                     sendEvents.push({n:node,m:m});

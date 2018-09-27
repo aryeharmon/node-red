@@ -202,7 +202,14 @@ module.exports = function(RED) {
         try {
             this.script = vm.createScript(functionText);
             
-            eval("node.func = function(msg){" + this.func + "}");
+	    try {
+		console.log(node.id, 'debug_ASD235');
+                eval("node.func = function(msg){" + this.func + "}");
+            } catch(err) {
+		node.error('did not run function, error in code syntax');
+		node.status('did not run function, error in code syntax');
+	        node.func = function(msg){ node.error('did not run function, error in code syntax') };
+            }
             
             this.on("input", function(msg) {
 

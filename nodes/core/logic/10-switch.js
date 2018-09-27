@@ -106,6 +106,7 @@ module.exports = function(RED) {
                 if (node.propertyType === 'jsonata') {
                     prop = RED.util.evaluateJSONataExpression(node.property,msg);
                 } else {
+			/* need to edit, add validation for field */
                     prop = RED.util.evaluateNodeProperty(node.property,node.propertyType,node,msg);
                 }
                 var elseflag = true;
