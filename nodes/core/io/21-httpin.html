@@ -36,6 +36,35 @@
     </div>
     <div class="form-row-http-in-security hide">
         <div class="form-row">
+            <label for="node-input-api_category"><i class="fa fa-wpforms"></i> API Category</label>
+            
+            <select id="node-input-api_category">
+                <option>Login</option>
+                <option>Trading</option>
+                <option>aaaaaaaaaaa</option>
+                <option>bbbbbbbbbbb</option>
+                <option>ccccccccccc</option>
+                <option>ddddddddddd</option>
+                <option>eeeeeeeeeee</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="node-input-api_enabled"><i class="fa fa-wpforms"></i> API Enabled</label>
+            <input type="checkbox" id="node-input-api_enabled" style="display: inline-block; width: auto; vertical-align: top;">
+        </div>
+        <div class="form-row">
+            <label for="node-input-model"><i class="icon-tag"></i> Model</label>
+            <select type="text" id="node-input-model"></select>
+        </div>
+        <div class="form-row">
+            <label for="node-input-required_fields"><i class="icon-tag"></i> Required Fields</label>
+            <select type="text" id="node-input-required_fields" multiple="multiple"></select>
+        </div>
+        <div class="form-row">
+            <label for="node-input-available_fields"><i class="icon-tag"></i> Required Fields</label>
+            <select type="text" id="node-input-available_fields" multiple="multiple"></select>
+        </div>
+        <div class="form-row">
             <label for="node-input-security_enabled"><i class="fa fa-wpforms"></i> Security Enabled</label>
             <input type="checkbox" id="node-input-security_enabled" style="display: inline-block; width: auto; vertical-align: top;">
         </div>
@@ -72,6 +101,10 @@
     <div class="form-row">
         <label for="node-input-url"><i class="fa fa-globe"></i> <span data-i18n="httpin.label.url"></span></label>
         <input id="node-input-url" type="text" placeholder="/url">
+    </div>
+    <div class="form-row">
+        <label for="node-input-api_url"><i class="fa fa-globe"></i> API URL /api/[XXX]</label>
+        <input id="node-input-api_url" type="text" placeholder="/url">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="common.label.name"></span></label>
@@ -194,15 +227,21 @@ msg.cookies = {
         color:"rgb(231, 231, 174)",
         defaults: {
             name: {value:""},
+            model: {value:""},
+            required_fields: {value:[]},
+            available_fields: {value:[]},
             url: {value:"",required:true},
+            api_url: {value:""},
             method: {value:"get",required:true},
             layout: {value: "",required:false},
             upload: {value:false},
             must_log_in: {value: false},
             must_be_active_account: {value: false},
-	    verify_captcha: {value: false},
-	    security_enabled: {value: false},
-	    security_type: {value: ""},
+    	    verify_captcha: {value: false},
+            security_enabled: {value: false},
+            api_enabled: {value: false},
+    	    api_category: {value: ''},
+	        security_type: {value: ""},
             swaggerDoc: {type:"swagger-doc", required:false}
         },
         inputs:0,
@@ -264,6 +303,30 @@ msg.cookies = {
             });
 
 
+            $.getJSON('getModels', function(models) {
+                node.models = models;
+                for (var n in node.models) {
+                    $('#node-input-model').append('<option value="'+node.models[n]+'">'+node.models[n]+'</option>');
+                }
+                $('#node-input-model').val(node.model);
+            });
+
+            $('#node-input-model').change(function() {
+                var model = $('#node-input-model').val();
+                
+                $('#node-input-required_fields').html('');
+                $('#node-input-available_fields').html('');
+
+                $.getJSON('getModelFields/' + (model || node.model), function(fields) {
+                    node.fields = fields;
+                    for (var n in node.fields) {
+                        $('#node-input-required_fields').append('<option value="'+node.fields[n]+'">'+node.fields[n]+'</option>');
+                        $('#node-input-available_fields').append('<option value="'+node.fields[n]+'">'+node.fields[n]+'</option>');
+                    }
+                    $('#node-input-required_fields').val(node.required_fields);
+                    $('#node-input-available_fields').val(node.available_fields);
+                });
+            })
 
 
         }

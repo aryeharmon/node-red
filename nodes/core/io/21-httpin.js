@@ -191,6 +191,12 @@ module.exports = function(RED) {
             if (this.url[0] !== '/') {
                 this.url = '/'+this.url;
             }
+            this.api_enabled = n.api_enabled;
+            this.api_url = n.api_url || this.url;
+            if (this.api_url[0] !== '/') {
+                this.api_url = '/'+this.api_url;
+            }
+
             this.method = n.method;
             this.upload = n.upload;
             this.must_log_in = n.must_log_in;
@@ -213,131 +219,131 @@ module.exports = function(RED) {
             this.callback = function(req,res, next) {
 
                 if (that.verify_captcha && req.recaptcha.error) {
-			req.flash('error', 'Invalid captcha.');
-			res.redirect('back');
-			node.status({text: 'invalid captcha.'})
-			return;
-		}
-        if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
-            req.flash('error', 'you must login in order to access this area');
-            res.redirect('login');
-            node.status({text: 'user not logged in.'})
-            return;
-        }
-        if (that.must_be_active_account && (!req.user || req.user.type !== 'Account' || !req.user.active)) {
-            req.flash('error', 'you must activate your account to access this area.');
-            res.redirect('login');
-            node.status({text: 'user not active.'})
-            return;
-        }
+        			req.flash('error', 'Invalid captcha.');
+        			res.redirect('back');
+        			node.status({text: 'invalid captcha.'})
+        			return;
+        		}
+                if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
+                    req.flash('error', 'you must login in order to access this area');
+                    res.redirect('login');
+                    node.status({text: 'user not logged in.'})
+                    return;
+                }
+                if (that.must_be_active_account && (!req.user || req.user.type !== 'Account' || !req.user.active)) {
+                    req.flash('error', 'you must activate your account to access this area.');
+                    res.redirect('login');
+                    node.status({text: 'user not active.'})
+                    return;
+                }
 
-		if (that.security_enabled && that.security_type) {
-			if (req.user || true) {
-				RED.settings.functionGlobalContext.app.models.Account.findOne({
-					where: {
-						$or: [
-							{
-								id: req.user ? req.user.id : null,
-							},
-							{
-								email: req.body.email,
-							}
-						],
-					},
-					include: ['AuthenticatorSecurityKey', 'SmsSecurityKey', 'EmailSecurityKey'],
-				}).then(function(account) {
-					if (!account) {
-                        req.flash('error', 'you must login in order to access this area');
-                        res.redirect('back');
-                        node.status({'text': 'no account found'});
-						return;
-					}
+        		if (that.security_enabled && that.security_type) {
+        			if (req.user || true) {
+        				RED.settings.functionGlobalContext.app.models.Account.findOne({
+        					where: {
+        						$or: [
+        							{
+        								id: req.user ? req.user.id : null,
+        							},
+        							{
+        								email: req.body.email,
+        							}
+        						],
+        					},
+        					include: ['AuthenticatorSecurityKey', 'SmsSecurityKey', 'EmailSecurityKey'],
+        				}).then(function(account) {
+        					if (!account) {
+                                req.flash('error', 'you must login in order to access this area');
+                                res.redirect('back');
+                                node.status({'text': 'no account found'});
+        						return;
+        					}
 
-                    // if has master account and no permissions
-                    account.role = account.role || [];
-                    if (account.master_account_id && account.role.indexOf(that.security_type) > -1 ) {
-                        req.flash('error', 'You do not have permissions to perform this action');
-                        res.redirect('back');
-                        node.status({'text': 'You do not have permissions to perform this action (slave account)'});
-                        return;
-                    }
+                            // if has master account and no permissions
+                            account.role = account.role || [];
+                            if (account.master_account_id && account.role.indexOf(that.security_type) > -1 ) {
+                                req.flash('error', 'You do not have permissions to perform this action');
+                                res.redirect('back');
+                                node.status({'text': 'You do not have permissions to perform this action (slave account)'});
+                                return;
+                            }
 
-					account.google_authenticator = account.google_authenticator || [];
-                    account.sms_authenticator = account.sms_authenticator || [];
-                    account.email_authenticator = account.email_authenticator || [];
-                    account.password_authenticator = account.password_authenticator || [];
-
-
-                    if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
-                        req.body.validation = req.body.validation || {};
-                        if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
-                            req.flash('error', 'invalid google authentication');
-                            res.redirect('back');
-                            node.status({'text': 'invalid google authentication'});
-                            return;
-                        }
-                    }
-                    if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
-                        req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
-                        if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
-                            req.flash('error', 'invalid email authentication');
-                            res.redirect('back');
-                            node.status({'text': 'invalid email authentication'});
-                            return;
-                        }
-                    }
-                    if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
-                        req.body.validation = req.body.validation || {};
-                        if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
-                            req.flash('error', 'invalid sms authentication');
-                            res.redirect('back');
-                            node.status({'text': 'invalid sms authentication'});
-                            return;
-                        }
-                    }
-                    if (account.password_authenticator.indexOf(that.security_type) > -1) {
-                        if (!bcrypt.compareSync(req.body.password, account.password)) {
-                            req.flash('error', 'invalid password');
-                            res.redirect('back');
-                            node.status({'text': 'invalid password authentication'});
-                            return;
-                        }
-                    }
-
-					// res.json(account);
-
-                    var msgid = RED.util.generateId();
-                    res._msgid = msgid;
-                    if (node.method.match(/^(post|delete|put|options|patch)$/)) {
-                        node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
-                    } else if (node.method == "get") {
-                        node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
-                    } else {
-                        node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
-                    }
+        					account.google_authenticator = account.google_authenticator || [];
+                            account.sms_authenticator = account.sms_authenticator || [];
+                            account.email_authenticator = account.email_authenticator || [];
+                            account.password_authenticator = account.password_authenticator || [];
 
 
-					// node.status({'text': 'found account: ' + account.id})
-				})
+                            if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
+                                req.body.validation = req.body.validation || {};
+                                if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
+                                    req.flash('error', 'invalid google authentication');
+                                    res.redirect('back');
+                                    node.status({'text': 'invalid google authentication'});
+                                    return;
+                                }
+                            }
+                            if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
+                                req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
+                                if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
+                                    req.flash('error', 'invalid email authentication');
+                                    res.redirect('back');
+                                    node.status({'text': 'invalid email authentication'});
+                                    return;
+                                }
+                            }
+                            if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
+                                req.body.validation = req.body.validation || {};
+                                if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
+                                    req.flash('error', 'invalid sms authentication');
+                                    res.redirect('back');
+                                    node.status({'text': 'invalid sms authentication'});
+                                    return;
+                                }
+                            }
+                            if (account.password_authenticator.indexOf(that.security_type) > -1) {
+                                if (!bcrypt.compareSync(req.body.password, account.password)) {
+                                    req.flash('error', 'invalid password');
+                                    res.redirect('back');
+                                    node.status({'text': 'invalid password authentication'});
+                                    return;
+                                }
+                            }
 
-				// check email validation
-				// check sms validation
-			}
+        					// res.json(account);
+
+                            var msgid = RED.util.generateId();
+                            res._msgid = msgid;
+                            if (node.method.match(/^(post|delete|put|options|patch)$/)) {
+                                node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
+                            } else if (node.method == "get") {
+                                node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
+                            } else {
+                                node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
+                            }
 
 
-			return;
-		}
+        					// node.status({'text': 'found account: ' + account.id})
+        				})
+
+        				// check email validation
+        				// check sms validation
+        			}
+
+
+        			return;
+        		}
 
 
 
                 var msgid = RED.util.generateId();
                 res._msgid = msgid;
                 if (node.method.match(/^(post|delete|put|options|patch)$/)) {
-                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
+                    node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
                 } else if (node.method == "get") {
-                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
+                    node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
                 } else {
-                    node.send({_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
+                    node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
                 }
             };
 
@@ -381,14 +387,29 @@ module.exports = function(RED) {
 
             if (this.method == "get") {
                 RED.httpNode.get(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,this.callback,this.errorHandler);
+                if (this.api_enabled) {
+                    RED.httpNode.get('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                }
             } else if (this.method == "post") {
                 RED.httpNode.post(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,recaptcha.middleware.verify,this.callback,this.errorHandler);
+                if (this.api_enabled) {
+                    RED.httpNode.post('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,recaptcha.middleware.verify,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                }
             } else if (this.method == "put") {
                 RED.httpNode.put(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
+                if (this.api_enabled) {
+                    RED.httpNode.put('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                }
             } else if (this.method == "patch") {
                 RED.httpNode.patch(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
+                if (this.api_enabled) {
+                    RED.httpNode.patch('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                }
             } else if (this.method == "delete") {
                 RED.httpNode.delete(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
+                if (this.api_enabled) {
+                    RED.httpNode.delete('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                }
             }
 
             this.on("close",function() {
