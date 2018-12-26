@@ -14,6 +14,20 @@
  * limitations under the License.
  **/
 
+
+var Message = function(text, message_type, display_type, location) {
+  if (!text) {
+    throw new Error('You must supply text')
+  }
+  return {
+    text: text,
+    location: location || 'bottom',
+    message_type: message_type || 'success',
+    display_type: display_type || 'notification_toast',
+  }
+}
+
+
 var Recaptcha = require('express-recaptcha').Recaptcha;
 var recaptcha = new Recaptcha(process.env.RECAPTCHA_SITE_KEY, process.env.RECAPTCHA_SECRET_KEY)
 
@@ -219,19 +233,19 @@ module.exports = function(RED) {
             this.callback = function(req,res, next) {
 
                 if (that.verify_captcha && req.recaptcha.error) {
-        			req.flash('error', 'Invalid captcha.');
+        			req.flash('messages', new Message('Invalid captcha.', 'danger'));
         			res.redirect('back');
         			node.status({text: 'invalid captcha.'})
         			return;
         		}
                 if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
-                    req.flash('error', 'you must login in order to access this area');
+                    req.flash('messages', new Message('you must login in order to access this area', 'danger'));
                     res.redirect('login');
                     node.status({text: 'user not logged in.'})
                     return;
                 }
                 if (that.must_be_active_account && (!req.user || req.user.type !== 'Account' || !req.user.active)) {
-                    req.flash('error', 'you must activate your account to access this area.');
+                    req.flash('messages', new Message('you must activate your account to access this area.', 'danger'));
                     res.redirect('login');
                     node.status({text: 'user not active.'})
                     return;
@@ -253,7 +267,7 @@ module.exports = function(RED) {
         					include: ['AuthenticatorSecurityKey', 'SmsSecurityKey', 'EmailSecurityKey'],
         				}).then(function(account) {
         					if (!account) {
-                                req.flash('error', 'you must login in order to access this area');
+                                req.flash('messages', new Message('you must login in order to access this area', 'danger'));
                                 res.redirect('back');
                                 node.status({'text': 'no account found'});
         						return;
@@ -262,7 +276,7 @@ module.exports = function(RED) {
                             // if has master account and no permissions
                             account.role = account.role || [];
                             if (account.master_account_id && account.role.indexOf(that.security_type) > -1 ) {
-                                req.flash('error', 'You do not have permissions to perform this action');
+                                req.flash('messages', new Message('You do not have permissions to perform this action', 'danger'));
                                 res.redirect('back');
                                 node.status({'text': 'You do not have permissions to perform this action (slave account)'});
                                 return;
@@ -277,7 +291,7 @@ module.exports = function(RED) {
                             if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
                                 req.body.validation = req.body.validation || {};
                                 if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
-                                    req.flash('error', 'invalid google authentication');
+                                    req.flash('messages', new Message('invalid google authentication', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid google authentication'});
                                     return;
@@ -286,7 +300,7 @@ module.exports = function(RED) {
                             if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
                                 req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
                                 if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
-                                    req.flash('error', 'invalid email authentication');
+                                    req.flash('messages', new Message('invalid email authentication', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid email authentication'});
                                     return;
@@ -295,7 +309,7 @@ module.exports = function(RED) {
                             if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
                                 req.body.validation = req.body.validation || {};
                                 if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
-                                    req.flash('error', 'invalid sms authentication');
+                                    req.flash('messages', new Message('invalid sms authentication', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid sms authentication'});
                                     return;
@@ -303,7 +317,7 @@ module.exports = function(RED) {
                             }
                             if (account.password_authenticator.indexOf(that.security_type) > -1) {
                                 if (!bcrypt.compareSync(req.body.password, account.password)) {
-                                    req.flash('error', 'invalid password');
+                                    req.flash('messages', new Message('invalid password', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid password authentication'});
                                     return;
