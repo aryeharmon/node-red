@@ -37,7 +37,7 @@
     <div class="form-row-http-in-security hide">
         <div class="form-row">
             <label for="node-input-api_category"><i class="fa fa-wpforms"></i> API Category</label>
-            
+
             <select id="node-input-api_category">
                 <option>Login</option>
                 <option>Trading</option>
@@ -61,7 +61,7 @@
             <select type="text" id="node-input-required_fields" multiple="multiple"></select>
         </div>
         <div class="form-row">
-            <label for="node-input-available_fields"><i class="icon-tag"></i> Required Fields</label>
+            <label for="node-input-available_fields"><i class="icon-tag"></i> Available Fields</label>
             <select type="text" id="node-input-available_fields" multiple="multiple"></select>
         </div>
         <div class="form-row">
@@ -270,7 +270,7 @@ msg.cookies = {
         },
         oneditprepare: function() {
             var node = this;
-            
+
             var root = RED.settings.httpNodeRoot;
             if (root.slice(-1) == "/") {
                 root = root.slice(0,-1);
@@ -287,7 +287,7 @@ msg.cookies = {
             $("#node-input-method").change(function() {
                 if ($(this).val() === "post") {
                     $(".form-row-http-in-upload").show();
-			$(".form-row-http-in-security").show();		    
+			$(".form-row-http-in-security").show();
                 } else {
                     $(".form-row-http-in-upload").hide();
 			$(".form-row-http-in-security").show();
@@ -313,7 +313,7 @@ msg.cookies = {
 
             $('#node-input-model').change(function() {
                 var model = $('#node-input-model').val();
-                
+
                 $('#node-input-required_fields').html('');
                 $('#node-input-available_fields').html('');
 
