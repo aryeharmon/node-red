@@ -1,6 +1,12 @@
 {
+  "_args": [
+    [
+      "git+https://github.com/aryeharmon/node-red.git",
+      "/opt/crypto"
+    ]
+  ],
   "_from": "git+https://github.com/aryeharmon/node-red.git",
-  "_id": "node-red@0.18.4",
+  "_id": "node-red@git+https://github.com/aryeharmon/node-red.git#0d76f3e8db8184a143f5923fe561807430e3aa49",
   "_inBundle": false,
   "_integrity": "",
   "_location": "/node-red",
@@ -68,7 +74,6 @@
     "gitCommittish": null
   },
   "_requiredBy": [
-    "#USER",
     "/"
   ],
   "_resolved": "git+https://github.com/aryeharmon/node-red.git#0d76f3e8db8184a143f5923fe561807430e3aa49",

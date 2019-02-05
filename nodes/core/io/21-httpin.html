@@ -110,6 +110,10 @@
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="common.label.name"></span></label>
         <input type="text" id="node-input-name" data-i18n="[placeholder]common.label.name">
     </div>
+    <div class="form-row">
+        <label for="node-input-api_output"><i class="fa fa-globe"></i> EXAMPLE SUCCESS JSON API OUTPUT</label>
+        <textarea id="node-input-api_output" placeholder="{}"></textarea>
+    </div>
     <div class="form-row row-swagger-doc">
         <label for="node-input-swaggerDoc"><i class="fa fa-file-text-o"></i> <span data-i18n="httpin.label.doc"></span></label>
         <input type="text" id="node-input-swaggerDoc">
@@ -232,6 +236,7 @@ msg.cookies = {
             available_fields: {value:[]},
             url: {value:"",required:true},
             api_url: {value:""},
+            api_output: {value:"{}"},
             method: {value:"get",required:true},
             layout: {value: "",required:false},
             upload: {value:false},

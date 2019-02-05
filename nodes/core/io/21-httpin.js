@@ -233,18 +233,30 @@ module.exports = function(RED) {
             this.callback = function(req,res, next) {
 
                 if (that.verify_captcha && req.recaptcha.error) {
-        			req.flash('messages', new Message('Invalid captcha.', 'danger'));
+                    if (res.locals.is_api) {
+                        return res.status(505).json({error: true, message: 'Invalid captcha.'});
+                    }
+
+                    req.flash('messages', new Message('Invalid captcha.', 'danger'));
         			res.redirect('back');
         			node.status({text: 'invalid captcha.'})
         			return;
         		}
                 if (that.must_log_in && (!req.user || req.user.type !== 'Account')) {
+                    if (res.locals.is_api) {
+                        return res.status(506).json({error: true, message: 'Not authenticated'});
+                    }
+
                     req.flash('messages', new Message('you must login in order to access this area', 'danger'));
                     res.redirect('login');
                     node.status({text: 'user not logged in.'})
                     return;
                 }
                 if (that.must_be_active_account && (!req.user || req.user.type !== 'Account' || !req.user.active)) {
+                    if (res.locals.is_api) {
+                        return res.status(507).json({error: true, message: 'you must activate your account to access this area.'});
+                    }
+
                     req.flash('messages', new Message('you must activate your account to access this area.', 'danger'));
                     res.redirect('login');
                     node.status({text: 'user not active.'})
@@ -267,6 +279,11 @@ module.exports = function(RED) {
         					include: ['AuthenticatorSecurityKey', 'SmsSecurityKey', 'EmailSecurityKey'],
         				}).then(function(account) {
         					if (!account) {
+
+                                if (res.locals.is_api) {
+                                    return res.status(508).json({error: true, message: 'Not authenticated'});
+                                }
+
                                 req.flash('messages', new Message('you must login in order to access this area', 'danger'));
                                 res.redirect('back');
                                 node.status({'text': 'no account found'});
@@ -276,6 +293,10 @@ module.exports = function(RED) {
                             // if has master account and no permissions
                             account.role = account.role || [];
                             if (account.master_account_id && account.role.indexOf(that.security_type) > -1 ) {
+                                if (res.locals.is_api) {
+                                    return res.status(509).json({error: true, message: 'You do not have permissions to perform this action'});
+                                }
+
                                 req.flash('messages', new Message('You do not have permissions to perform this action', 'danger'));
                                 res.redirect('back');
                                 node.status({'text': 'You do not have permissions to perform this action (slave account)'});
@@ -291,6 +312,11 @@ module.exports = function(RED) {
                             if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
                                 req.body.validation = req.body.validation || {};
                                 if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
+                                    
+                                    if (res.locals.is_api) {
+                                        return res.status(510).json({error: true, message: 'invalid google authentication'});
+                                    }
+
                                     req.flash('messages', new Message('invalid google authentication', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid google authentication'});
@@ -300,6 +326,11 @@ module.exports = function(RED) {
                             if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
                                 req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
                                 if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
+                                    
+                                    if (res.locals.is_api) {
+                                        return res.status(511).json({error: true, message: 'invalid email authentication'});
+                                    }
+
                                     req.flash('messages', new Message('invalid email authentication', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid email authentication'});
@@ -309,6 +340,9 @@ module.exports = function(RED) {
                             if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
                                 req.body.validation = req.body.validation || {};
                                 if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
+                                    if (res.locals.is_api) {
+                                        return res.status(512).json({error: true, message: 'invalid sms authentication'});
+                                    }
                                     req.flash('messages', new Message('invalid sms authentication', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid sms authentication'});
@@ -317,6 +351,10 @@ module.exports = function(RED) {
                             }
                             if (account.password_authenticator.indexOf(that.security_type) > -1) {
                                 if (!bcrypt.compareSync(req.body.password, account.password)) {
+                                    if (res.locals.is_api) {
+                                        return res.status(513).json({error: true, message: 'invalid password authentication'});
+                                    }
+
                                     req.flash('messages', new Message('invalid password', 'danger'));
                                     res.redirect('back');
                                     node.status({'text': 'invalid password authentication'});
@@ -402,27 +440,42 @@ module.exports = function(RED) {
             if (this.method == "get") {
                 RED.httpNode.get(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,this.callback,this.errorHandler);
                 if (this.api_enabled) {
-                    RED.httpNode.get('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                    RED.httpNode.get('/cms/:site/api' + this.api_url,function(req, res, next) {
+                        res.locals.is_api = true; // ggg
+                        next();
+                    },cookieParser(),httpMiddleware,corsHandler,metricsHandler,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
                 }
             } else if (this.method == "post") {
                 RED.httpNode.post(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,recaptcha.middleware.verify,this.callback,this.errorHandler);
                 if (this.api_enabled) {
-                    RED.httpNode.post('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,recaptcha.middleware.verify,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                    RED.httpNode.post('/cms/:site/api' + this.api_url,function(req, res, next) {
+                        res.locals.is_api = true; // ggg
+                        next();
+                    },cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,multipartParser,rawBodyParser,recaptcha.middleware.verify,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
                 }
             } else if (this.method == "put") {
                 RED.httpNode.put(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
                 if (this.api_enabled) {
-                    RED.httpNode.put('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                    RED.httpNode.put('/cms/:site/api' + this.api_url,function(req, res, next) {
+                        res.locals.is_api = true; // ggg
+                        next();
+                    },cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
                 }
             } else if (this.method == "patch") {
                 RED.httpNode.patch(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
                 if (this.api_enabled) {
-                    RED.httpNode.patch('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                    RED.httpNode.patch('/cms/:site/api' + this.api_url,function(req, res, next) {
+                        res.locals.is_api = true; // ggg
+                        next();
+                    },cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
                 }
             } else if (this.method == "delete") {
                 RED.httpNode.delete(this.url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,this.callback,this.errorHandler);
                 if (this.api_enabled) {
-                    RED.httpNode.delete('/api' + this.api_url,cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
+                    RED.httpNode.delete('/cms/:site/api' + this.api_url,function(req, res, next) {
+                        res.locals.is_api = true; // ggg
+                        next();
+                    },cookieParser(),httpMiddleware,corsHandler,metricsHandler,jsonParser,urlencParser,rawBodyParser,function(req, res, next) { res.locals.is_api = true; next() },this.callback,this.errorHandler);
                 }
             }
 
