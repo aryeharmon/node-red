@@ -21,15 +21,23 @@
     <dt>Set</dt>
     <dd>set a property. The value can be a variety of different types, or
             can be taken from an existing message or context property.</dd>
+    <dt>Example</dt>
+    <dd>msg.payload.field_name = Hello or msg.payload.field_name = 12 or msg.payload.field_name = true</dd>
     <dt>Change</dt>
     <dd>search &amp; replace parts of the property. If regular expressions
         are enabled, the "replace with" property can include capture groups, for
         example <code>$1</code>. Replace will only change the type if there
         is a complete match.</dd>
+    <dt>Example</dt>
+    <dd>msg.payload.field_name = 'hello good hello' search = 'ok' result = 'ok good ok'</dd>
     <dt>Delete</dt>
     <dd>delete a property.</dd>
+    <dt>Example</dt>
+    <dd>delete msg.payload.field_name</dd>
     <dt>Move</dt>
     <dd>move or rename a property.</dd>
+    <dt>Example</dt>
+    <dd>delete msg.payload.field_name and msg.payload.new_field_name</dd>
     </dl>
     <p>The "expression" type uses the <a href="http://jsonata.org/" target="_new">JSONata</a>
     query and expression language.
@@ -268,4 +276,3 @@
         }
     });
 </script>
-
