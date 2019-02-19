@@ -109,6 +109,7 @@ return {
     comms: api.comms,
     library: api.library,
     auth: api.auth,
+    runtime: runtime,
 
     get app() { console.log("Deprecated use of RED.app - use RED.httpAdmin instead"); return runtime.app },
     get httpAdmin() { return adminApp },
