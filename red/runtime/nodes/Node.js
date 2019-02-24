@@ -178,8 +178,9 @@ Node.prototype.send = function(msg) {
                                 if (!sentMessageId) {
                                     sentMessageId = m._msgid;
                                 }
-                                if (msgSent) {
-                                    var clonedmsg = m.hook ? m : redUtil.cloneMessage(m);
+                                if (msgSent) { // aryeh changes  console.log(Object.keys(m), 3333)
+                                    var clonedmsg = (m.hook || m.res) ? m : redUtil.cloneMessage(m);
+				    // var clonedmsg = m.hook ? m : redUtil.cloneMessage(m);
                                     sendEvents.push({n:node,m:clonedmsg});
                                 } else {
                                     sendEvents.push({n:node,m:m});

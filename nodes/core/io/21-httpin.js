@@ -311,7 +311,7 @@ module.exports = function(RED) {
 
                             if (account.google_authenticator.indexOf(that.security_type) > -1 && account.AuthenticatorSecurityKey) {
                                 req.body.validation = req.body.validation || {};
-                                if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret, req.body.validation.google_authenticator)) {
+                                if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret || '', req.body.validation.google_authenticator || '')) {
                                     
                                     if (res.locals.is_api) {
                                         return res.status(510).json({error: true, message: 'invalid google authentication'});
@@ -325,7 +325,7 @@ module.exports = function(RED) {
                             }
                             if (account.email_authenticator.indexOf(that.security_type) > -1 && account.EmailSecurityKey) {
                                 req.body.validation = req.body.validation || {}; console.log(req.body.validation, 444, account.EmailSecurityKey.secret);
-                                if (!authenticator.verifyToken(account.EmailSecurityKey.secret, req.body.validation.email_authenticator)) {
+                                if (!authenticator.verifyToken(account.EmailSecurityKey.secret || '', req.body.validation.email_authenticator || '')) {
                                     
                                     if (res.locals.is_api) {
                                         return res.status(511).json({error: true, message: 'invalid email authentication'});
@@ -339,7 +339,7 @@ module.exports = function(RED) {
                             }
                             if (account.sms_authenticator.indexOf(that.security_type) > -1 && account.SmsSecurityKey) {
                                 req.body.validation = req.body.validation || {};
-                                if (!authenticator.verifyToken(account.SmsSecurityKey.secret, req.body.validation.sms_authenticator)) {
+                                if (!authenticator.verifyToken(account.SmsSecurityKey.secret || '', req.body.validation.sms_authenticator || '')) {
                                     if (res.locals.is_api) {
                                         return res.status(512).json({error: true, message: 'invalid sms authentication'});
                                     }
