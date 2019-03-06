@@ -21,7 +21,7 @@ module.exports = function(RED) {
                             node.send(msg);
                         }
                         catch(e) {
-                            node.error(RED._("yaml.errors.dropped-error"));
+                            node.error(RED._("yaml.errors.dropped-error"), msg);
                         }
                     }
                     else { node.warn(RED._("yaml.errors.dropped-object")); }

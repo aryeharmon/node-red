@@ -313,12 +313,6 @@ module.exports = function(RED) {
                                 req.body.validation = req.body.validation || {};
                                 if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret || '', req.body.validation.google_authenticator || '')) {
                                     
-					node.error('>>>>>>>>>>>>> google debug');
-					node.error(account);
-                                        node.error(account.AuthenticatorSecurityKey);
-                                        node.error(account.AuthenticatorSecurityKey.secret);
-                                        node.error(req.body.validation.google_authenticator);
-					node.error('end google debug <<<<<<<<<<<<<');
                                     if (res.locals.is_api) {
                                         return res.status(510).json({error: true, message: 'invalid google authentication'});
                                     }

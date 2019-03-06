@@ -247,8 +247,13 @@ Node.prototype.warn = function(msg) {
     log_helper(this, Log.WARN, msg);
 };
 
-Node.prototype.error = function(logMessage,msg, headers) { // @TODO add headers
+Node.prototype.error = function(logMessage, msg) {
     var stack_trace = new Error().stack;
+    var headers;
+
+    if (msg && msg.req) {
+        headers = msg.req.headers;
+    }
 
     this.context().global.app.mongoManager.insert('node_red_log', {
         name: `node red Error`,
@@ -258,7 +263,6 @@ Node.prototype.error = function(logMessage,msg, headers) { // @TODO add headers
         block: this.id,
         flow_path: `/flows/${this.context().global.flow_slug}/#flow/${this.z}/${this.id}`,
         stack_trace: stack_trace,
-        msg_obj: msg,
         headers: headers,
         message: logMessage,
     });

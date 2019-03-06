@@ -36,7 +36,7 @@ module.exports = function(RED) {
                             msg.payload = JSON.stringify(msg.payload,null,node.indent);
                             node.send(msg);
                         }
-                        catch(e) { node.error(RED._("json.errors.dropped-error")); }
+                        catch(e) { node.error(RED._("json.errors.dropped-error"), msg); }
                     }
                     else { node.warn(RED._("json.errors.dropped-object")); }
                 }

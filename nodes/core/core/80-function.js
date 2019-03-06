@@ -217,7 +217,7 @@ module.exports = function(RED) {
                     var msg_result = node.func(msg);
                     node.send(msg_result || msg);
                 } catch(err) {
-                    node.error(err.toString());
+                    node.error(err.toString(), msg);
                     node.status({fill: "red", shape: "ring", text: err.toString()});
                 }
 

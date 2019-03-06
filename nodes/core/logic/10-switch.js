@@ -120,7 +120,7 @@ module.exports = function(RED) {
                         try {
                             v1 = RED.util.evaluateJSONataExpression(rule.v,msg);
                         } catch(err) {
-                            node.error(RED._("switch.errors.invalid-expr",{error:err.message}));
+                            node.error(RED._("switch.errors.invalid-expr",{error:err.message}), msg);
                             return;
                         }
                     } else {
@@ -137,7 +137,7 @@ module.exports = function(RED) {
                         try {
                             v2 = RED.util.evaluateJSONataExpression(rule.v2,msg);
                         } catch(err) {
-                            node.error(RED._("switch.errors.invalid-expr",{error:err.message}));
+                            node.error(RED._("switch.errors.invalid-expr",{error:err.message}), msg);
                             return;
                         }
                     } else if (typeof v2 !== 'undefined') {
