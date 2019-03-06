@@ -137,6 +137,7 @@ Node.prototype.send = function(msg) {
             }
             this.metric("send",msg);
             node = flows.get(this._wire);
+
             /* istanbul ignore else */
             if (node) {
                 node.receive(msg);
@@ -220,6 +221,7 @@ Node.prototype.receive = function(msg) {
     try {
         this.emit("input", msg);
     } catch(err) {
+        console.log('dddddddddddddddd')
         this.error(err,msg);
     }
 };
@@ -245,7 +247,22 @@ Node.prototype.warn = function(msg) {
     log_helper(this, Log.WARN, msg);
 };
 
-Node.prototype.error = function(logMessage,msg) {
+Node.prototype.error = function(logMessage,msg, headers) { // @TODO add headers
+    var stack_trace = new Error().stack;
+
+    this.context().global.app.mongoManager.insert('node_red_log', {
+        name: `node red Error`,
+        block_type: this.type,
+        flow: this.context().global.flow_slug,
+        tab: this.z,
+        block: this.id,
+        flow_path: `/flows/${this.context().global.flow_slug}/#flow/${this.z}/${this.id}`,
+        stack_trace: stack_trace,
+        msg_obj: msg,
+        headers: headers,
+        message: logMessage,
+    });
+
     if (typeof logMessage != 'boolean') {
         logMessage = logMessage || "";
     }
@@ -293,3 +310,4 @@ instances[instance_id] = Node;
 return Node;
 
 };
+

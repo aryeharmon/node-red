@@ -313,6 +313,12 @@ module.exports = function(RED) {
                                 req.body.validation = req.body.validation || {};
                                 if (!req.body.validation.google_authenticator || !authenticator.verifyToken(account.AuthenticatorSecurityKey.secret || '', req.body.validation.google_authenticator || '')) {
                                     
+					node.error('>>>>>>>>>>>>> google debug');
+					node.error(account);
+                                        node.error(account.AuthenticatorSecurityKey);
+                                        node.error(account.AuthenticatorSecurityKey.secret);
+                                        node.error(req.body.validation.google_authenticator);
+					node.error('end google debug <<<<<<<<<<<<<');
                                     if (res.locals.is_api) {
                                         return res.status(510).json({error: true, message: 'invalid google authentication'});
                                     }
@@ -367,13 +373,30 @@ module.exports = function(RED) {
                             var msgid = RED.util.generateId();
                             res._msgid = msgid;
                             if (node.method.match(/^(post|delete|put|options|patch)$/)) {
-                                node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
+                                var msg = {api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body};
+                                node.send(msg);
                             } else if (node.method == "get") {
-                                node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
+                                var msg = {api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body};
+                                node.send(msg);
                             } else {
-                                node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
+                                var msg = {api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)};
+                                node.send(msg);
                             }
 
+                            // msg.current_block = node.id;
+
+                            setTimeout(function() {
+                                if(!res.headersSent) {
+                                    res.json({
+                                        error: true,
+                                        timeout: true,
+                                        block: node.id,
+                                        current_block: msg.current_block,
+                                        flow_slug: RED.settings.functionGlobalContext.flow_slug,
+                                        path: `/flows/${RED.settings.functionGlobalContext.flow_slug}/#flow/${node.z}`,
+                                    });
+                                }
+                            }, 10000);
 
         					// node.status({'text': 'found account: ' + account.id})
         				})
@@ -391,12 +414,31 @@ module.exports = function(RED) {
                 var msgid = RED.util.generateId();
                 res._msgid = msgid;
                 if (node.method.match(/^(post|delete|put|options|patch)$/)) {
-                    node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body});
+                    var msg = {api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.body, _payload: req.body};
+                    node.send(msg);
                 } else if (node.method == "get") {
-                    node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body});
+                    var msg = {api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res),payload:req.query, _payload: req.body};
+                    node.send(msg);
                 } else {
-                    node.send({api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)});
+                    var msg = {api: res.locals.is_api,_msgid:msgid,req:req,next:next,res:createResponseWrapper(node,res)};
+                    node.send(msg);
                 }
+
+                // msg.current_block = node.id;
+
+                setTimeout(function() {
+                    if(!res.headersSent) {
+                        res.json({
+                            error: true,
+                            timeout: true,
+                            block: node.id,
+                            current_block: msg.current_block,
+                            flow_slug: RED.settings.functionGlobalContext.flow_slug,
+                            path: `/flows/${RED.settings.functionGlobalContext.flow_slug}/#flow/${node.z}`,
+                        });
+                    }
+                }, 10000);
+
             };
 
             var httpMiddleware = function(req,res,next) { next(); }
