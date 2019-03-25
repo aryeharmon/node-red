@@ -43,6 +43,7 @@ module.exports = function(RED) {
     var urlencParser = bodyParser.urlencoded({extended:true});
     var onHeaders = require('on-headers');
     var typer = require('media-typer');
+    var _ = require('lodash');
     var isUtf8 = require('is-utf8');
     var hashSum = require("hash-sum");
     var authenticator = require("authenticator");
@@ -230,8 +231,12 @@ module.exports = function(RED) {
                 res.sendStatus(500);
             };
 
-            this.callback = function(req,res, next) {
-
+            this.callback = function(req,res, _next) {
+                var next_has_been_called = false;
+                var next = function() {
+                    _next();
+                    next_has_been_called = true;
+                }
                 if (that.verify_captcha && req.recaptcha.error) {
                     if (res.locals.is_api) {
                         return res.status(505).json({error: true, message: 'Invalid captcha.'});
@@ -380,7 +385,7 @@ module.exports = function(RED) {
                             // msg.current_block = node.id;
 
                             setTimeout(function() {
-                                if(!res.headersSent) {
+                                if(!res.headersSent && !next_has_been_called) {
                                     res.json({
                                         error: true,
                                         timeout: true,
@@ -421,7 +426,7 @@ module.exports = function(RED) {
                 // msg.current_block = node.id;
 
                 setTimeout(function() {
-                    if(!res.headersSent) {
+                    if(!res.headersSent && !next_has_been_called) {
                         res.json({
                             error: true,
                             timeout: true,
@@ -553,9 +558,12 @@ module.exports = function(RED) {
     function HTTPOut(n) {
         RED.nodes.createNode(this,n);
         var node = this;
+
+
         this.headers = n.headers||{};
         this.statusCode = n.statusCode;
         this.on("input",function(msg) {
+            var response = _.get(msg, n.output_name || 'payload', msg.payload);
             if (msg.res) {
                 var headers = RED.util.cloneMessage(node.headers);
                 if (msg.headers) {
@@ -596,27 +604,27 @@ module.exports = function(RED) {
                     }
                 }
                 var statusCode = node.statusCode || msg.statusCode || 200;
-                if (typeof msg.payload == "object" && !Buffer.isBuffer(msg.payload)) {
-                    msg.res._res.status(statusCode).jsonp(msg.payload);
+                if (typeof response == "object" && !Buffer.isBuffer(response)) {
+                    msg.res._res.status(statusCode).jsonp(response);
                 } else {
                     if (msg.res._res.get('content-length') == null) {
                         var len;
-                        if (msg.payload == null) {
+                        if (response == null) {
                             len = 0;
-                        } else if (Buffer.isBuffer(msg.payload)) {
-                            len = msg.payload.length;
-                        } else if (typeof msg.payload == "number") {
-                            len = Buffer.byteLength(""+msg.payload);
+                        } else if (Buffer.isBuffer(response)) {
+                            len = response.length;
+                        } else if (typeof response == "number") {
+                            len = Buffer.byteLength(""+response);
                         } else {
-                            len = Buffer.byteLength(msg.payload);
+                            len = Buffer.byteLength(response);
                         }
                         msg.res._res.set('content-length', len);
                     }
 
-                    if (typeof msg.payload === "number") {
-                        msg.payload = ""+msg.payload;
+                    if (typeof response === "number") {
+                        response = ""+response;
                     }
-                    msg.res._res.status(statusCode).send(msg.payload);
+                    msg.res._res.status(statusCode).send(response);
                 }
             } else {
                 node.warn(RED._("httpin.errors.no-response"));
@@ -633,6 +641,34 @@ module.exports = function(RED) {
       }
 
       RED.settings.functionGlobalContext.app.models.CmsBlockLayout.findAll({where: where, raw: true}).then(function(layouts) {
+        res.json(layouts.map(function(layout) {
+          return {
+            id: layout.id,
+            name: layout.name,
+          };
+        }))
+      });
+    });
+    RED.httpAdmin.get('/get-kb-categories', function(req, res, next) {
+
+      RED.settings.functionGlobalContext.app.models.Kbcategory.findAll({where: {
+        type: 'api',
+        status: 'published_public',
+      }, raw: true}).then(function(layouts) {
+        res.json(layouts.map(function(layout) {
+          return {
+            id: layout.id,
+            name: layout.name,
+          };
+        }))
+      });
+    });
+    RED.httpAdmin.get('/get-knowledgebasis', function(req, res, next) {
+
+      RED.settings.functionGlobalContext.app.models.Knowledgebasis.findAll({where: {
+        type: 'api',
+        // status: 'published_public',
+      }, raw: true}).then(function(layouts) {
         res.json(layouts.map(function(layout) {
           return {
             id: layout.id,

@@ -39,13 +39,12 @@
             <label for="node-input-api_category"><i class="fa fa-wpforms"></i> API Category</label>
             
             <select id="node-input-api_category">
-                <option>Login</option>
-                <option>Trading</option>
-                <option>aaaaaaaaaaa</option>
-                <option>bbbbbbbbbbb</option>
-                <option>ccccccccccc</option>
-                <option>ddddddddddd</option>
-                <option>eeeeeeeeeee</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="node-input-description"><i class="fa fa-wpforms"></i> API Description</label>
+            
+            <select id="node-input-description">
             </select>
         </div>
         <div class="form-row">
@@ -167,6 +166,10 @@
         <input type="text" id="node-input-name" data-i18n="[placeholder]common.label.name">
     </div>
     <div class="form-row">
+        <label for="node-input-output_name">Output Name</label>
+        <input type="text" id="node-input-output_name">
+    </div>
+    <div class="form-row">
         <label for="node-input-statusCode"><i class="fa fa-long-arrow-left"></i> <span data-i18n="httpin.label.status"></span></label>
         <input type="text" id="node-input-statusCode" placeholder="msg.statusCode">
     </div>
@@ -245,7 +248,8 @@ msg.cookies = {
     	    verify_captcha: {value: false},
             security_enabled: {value: false},
             api_enabled: {value: false},
-    	    api_category: {value: ''},
+            api_category: {value: ''},
+    	    description: {value: ''},
 	        security_type: {value: ""},
             swaggerDoc: {type:"swagger-doc", required:false}
         },
@@ -306,6 +310,21 @@ msg.cookies = {
                 }
                 $('#node-input-layout').val(node.layout)
             });
+            $.get( "get-kb-categories", function( data ) {
+                $('#node-input-api_category').html(`<option value="">None</option>`)
+                for (var i = 0; i < data.length; i++) {
+                    $('#node-input-api_category').append(`<option value="${data[i].id}">${data[i].name}</option>`)
+                }
+                $('#node-input-api_category').val(node.api_category)
+            });
+
+            $.get( "get-knowledgebasis", function( data ) {
+                $('#node-input-description').html(`<option value="">None</option>`)
+                for (var i = 0; i < data.length; i++) {
+                    $('#node-input-description').append(`<option value="${data[i].id}">${data[i].name}</option>`)
+                }
+                $('#node-input-description').val(node.description)
+            });
 
 
             $.getJSON('getModels', function(models) {
@@ -359,7 +378,8 @@ msg.cookies = {
         defaults: {
             name: {value:""},
             statusCode: {value:"",validate: RED.validators.number(true)},
-            headers: {value:{}}
+            headers: {value:{}},
+            output_name: {value:"payload"},
         },
         inputs:1,
         outputs:0,
