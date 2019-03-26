@@ -355,7 +355,7 @@ module.exports = function(RED) {
                                 }
                             }
                             if (account.password_authenticator.indexOf(that.security_type) > -1) {
-                                if (!bcrypt.compareSync(req.body.password, account.password)) {
+                                if (!bcrypt.compareSync(req.body.validation.password || '', account.password || '')) {
                                     if (res.locals.is_api) {
                                         return res.status(513).json({error: true, message: 'invalid password authentication'});
                                     }
