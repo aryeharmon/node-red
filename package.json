@@ -43,6 +43,7 @@
         "hash-sum": "1.0.2",
         "https-proxy-agent": "2.2.1",
         "i18next": "15.0.9",
+        "ibantools": "^2.2.0",
         "iconv-lite": "0.4.24",
         "is-utf8": "0.2.1",
         "js-yaml": "3.13.0",
