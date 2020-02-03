@@ -38,6 +38,7 @@
         "denque": "1.4.1",
         "express": "4.17.1",
         "express-session": "1.16.2",
+        "findup-sync": "^4.0.0",
         "fs-extra": "8.1.0",
         "fs.notify": "0.0.4",
         "hash-sum": "2.0.0",
