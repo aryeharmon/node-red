@@ -26,7 +26,6 @@
     "dependencies": {
         "ajv": "6.10.2",
         "basic-auth": "2.0.1",
-        "bcryptjs": "2.4.3",
         "body-parser": "1.19.0",
         "cheerio": "0.22.0",
         "clone": "2.1.2",
@@ -103,13 +102,14 @@
         "request": "2.88.0",
         "scraper-nodes": "file:../Blocks/scraper-nodes",
         "semver": "6.3.0",
+        "sequelize": "^4.43.1",
         "uglify-js": "3.6.0",
         "when": "3.7.8",
         "ws": "6.2.1",
         "xml2js": "0.4.19"
     },
     "optionalDependencies": {
-        "bcrypt": "^3.0.6"
+        "bcrypt": "^3.0.8"
     },
     "devDependencies": {
         "grunt": "~1.0.4",
